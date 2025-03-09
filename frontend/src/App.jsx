@@ -5,6 +5,8 @@ function App() {
     <>
       <h1>Heloo</h1>
       <h2>Helloooo</h2>
+      <h1>Heloo</h1>
+      <h2>Helloooo</h2>
     </>
   );
 }
