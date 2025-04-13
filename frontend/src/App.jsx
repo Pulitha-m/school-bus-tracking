@@ -1,26 +1,126 @@
-import "./App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom"; // Import BrowserRouter and Routes from react-router-dom
-import { StudentDashboard } from "./Pages/Student/StudentDashboard";
-import { DriverDashboard } from "./Pages/Driver/DriverDashboard";
+import React from "react";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Outlet,
+  Navigate,
+} from "react-router-dom";
+import { Header } from "./Pages/components/Header";
+import { HomePage } from "./Pages/HomePage";
+import { RoutesPage } from "./Pages/RoutePage";
+import { CareersPage } from "./Pages/CareersPage";
+import { Footer } from "./Pages/components/Footer";
+import Auth from "./Pages/Auth";
 import { AdminDashboard } from "./Pages/Admin/AdminDashboard";
-import OwnerDashboard from "./Pages/Owner/OwnerDashboard";
+import AddBus from "./Pages/Admin/Vehicle/AddBus";
+import AdminLayout from "./Pages/Admin/components/AdminLayout";
+import VehicleManagement from "./Pages/Admin/VehicleManagement";
+import Dashboard from "./Pages/Admin/Dashboard";
+import EditBus from "./Pages/Admin/Vehicle/EditBus";
+import ViewBus from "./Pages/Admin/Vehicle/ViewBus";
+import RouteManagement from "./Pages/Admin/RouteManagement";
+import AddRoute from "./Pages/Admin/Route/AddRoute";
+import EditRoute from "./Pages/Admin/Route/EditRoute";
+import CareerManagement from "./Pages/Admin/CareerManagement";
+import DriverManagement from "./Pages/Admin/DriverManagement";
+import DriverDashboard from "./Pages/Driver/DriverDashboard";
+import DriverLayout from "./Pages/Driver/components/DriverLayout";
+import DriverProfile from "./Pages/Driver/DriverProfile";
+import ShareLocation from "./Pages/Driver/ShareLocation";
+import StudentLocationTracking from "./Pages/Driver/StudentLocationTracking";
+import { StudentLayout } from "./Pages/Student/components/StudentLayout";
+import { StudentProfile } from "./Pages/Student/StudentProfile";
 
-function App() {
+import StripePayment from "./Pages/components/StripePayment";
+import RegistrationSuccess from "./Pages/components/RegistrationSuccess";
+import { FinanceManagement } from "./Pages/Admin/FinanceManagement";
+
+const PublicLayout = () => {
   return (
-    <div className="w-full min-h-screen bg-gray-50">
-      {
-        /*<StudentDashboard></StudentDashboard>*/
-        // <DriverDashboard></DriverDashboard>
-        <AdminDashboard />
-        /*<BrowserRouter>
-          <Routes>
-            <Route path="/*" element={<OwnerDashboard />} />
-          </Routes>
-        </BrowserRouter>
-        */
-      }
+    <div className="flex flex-col min-h-screen bg-white">
+      <Header />
+      <main className="flex-grow">
+        <Outlet />
+      </main>
+      <Footer />
     </div>
   );
-}
+};
 
-export default App;
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        {/* Public pages */}
+        <Route element={<PublicLayout />}>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/routes" element={<RoutesPage />} />
+          <Route path="/careers" element={<CareersPage />} />
+          <Route path="/auth" element={<Auth />} />
+          <Route
+            path="/registration-success"
+            element={<RegistrationSuccess />}
+          />
+        </Route>
+
+        {/* Admin pages wrapped in AdminLayout with Sidebar */}
+        <Route element={<AdminLayout />}>
+          <Route path="/admin" element={<AdminDashboard />}>
+            <Route path="dashboard" element={<Dashboard />} />
+            {/* Vehicle management */}
+            <Route path="vehicles" element={<VehicleManagement />} />
+            <Route path="vehicles/addVehicle" element={<AddBus />} />
+            <Route path="vehicles/editBus/:busId" element={<EditBus />} />
+            <Route path="vehicles/viewBus/:busId" element={<ViewBus />} />
+
+            {/* Route management */}
+            <Route path="routes" element={<RouteManagement />} />
+            <Route path="routes/addRoute" element={<AddRoute />} />
+            <Route path="routes/editRoute/:routeId" element={<EditRoute />} />
+            <Route path="routes/viewRoute/:routeId" element={<EditRoute />} />
+
+            {/* Career management */}
+            <Route path="careers" element={<CareerManagement />} />
+            <Route path="career/applyCareer" element={<AddRoute />} />
+
+            {/* Driver management */}
+            <Route path="drivers" element={<DriverManagement />} />
+
+            {/* Finance mgt */}
+            <Route path="finance" element={<FinanceManagement />} />
+          </Route>
+        </Route>
+
+        {/* Driver pages wrapped in DriverLayout with Sidebar */}
+        <Route element={<DriverLayout />}>
+          <Route path="/driver" element={<DriverDashboard />}>
+            <Route index element={<Navigate to="profile" />} />
+            <Route path="dashboard" element={<DriverProfile />} />
+            <Route path="profile" element={<DriverProfile />} />
+            {/* <Route path="students" element={<StudentManagement />} />
+            <Route path="location" element={<StudentLocationTracking />} />
+            
+            <Route path="payments" element={<Payments />} />
+            <Route path="notifications" element={<Notifications />} />
+            <Route path="vehicle" element={<VehicleInfo />} /> */}
+            <Route path="sharelocation" element={<ShareLocation />} />
+            <Route path="location" element={<StudentLocationTracking />} />
+          </Route>
+        </Route>
+
+        {/* Student pages wrapped in Student layout with Sidebar */}
+        <Route path="/student" element={<StudentLayout />}>
+          <Route index element={<Navigate to="profile" />} />
+          <Route path="profile" element={<StudentProfile />} />
+          {/* <Route path="attendance" element={<AttendanceSection />} />
+          <Route path="location" element={<LocationTracking />} />
+          <Route path="notifications" element={<NotificationsSection />} />
+          <Route path="payments" element={<PaymentSection />} />
+          <Route path="feedback" element={<FeedbackSection />} />
+          <Route path="notes" element={<DriverNotes />} /> */}
+        </Route>
+      </Routes>
+    </BrowserRouter>
+  );
+}
