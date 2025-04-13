@@ -1,7 +1,7 @@
 package com.BusTracking.backend.Controller;
 
-import com.Safetrack.back.Model.Notification;
-import com.Safetrack.back.Repository.NotificationRepo;
+import com.BusTracking.backend.Model.Notification;
+import com.BusTracking.backend.Repository.NotificationRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
