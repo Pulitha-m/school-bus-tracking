@@ -1,6 +1,6 @@
 package com.BusTracking.backend.Controller;
 
-import com.Safetrack.back.Model.Location;
+import com.BusTracking.backend.Model.Location;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

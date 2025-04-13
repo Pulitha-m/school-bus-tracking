@@ -3,8 +3,8 @@ package com.BusTracking.backend.Controller;
 
 
 
-import com.Safetrack.back.Model.GpsData;
-import com.Safetrack.back.Repository.GpsDataRepository;
+import com.BusTracking.backend.Model.GpsData;
+import com.BusTracking.backend.Repository.GpsDataRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
