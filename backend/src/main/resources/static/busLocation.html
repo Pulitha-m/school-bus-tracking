@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bus Live Location</title>
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      margin: 0;
+      text-align: center;
+    }
+
+    #map {
+      margin: 20px auto;
+      width: 90%;
+      height: 500px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+    }
+
+    #error {
+      color: red;
+      display: none;
+      margin: 10px 0;
+    }
+
+    #waitingMessage {
+      font-size: 16px;
+      margin: 10px 0;
+    }
+
+    .header {
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+<div class="header">
+  <h1 id="busTitle">Bus Live Location</h1>
+  <p id="busIdDisplay"></p>
+</div>
+<div id="map"></div>
+<p id="error"></p>
+<p id="waitingMessage">Waiting for location updates...</p>
+
+<!-- Include Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // Get busId from URL query parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const busId = urlParams.get('busId');
+
+    if (!busId) {
+      document.getElementById("error").style.display = "block";
+      document.getElementById("error").textContent = "No bus ID provided in URL";
+      document.getElementById("waitingMessage").style.display = "none";
+      return;
+    }
+
+    // Update UI with bus ID
+    document.getElementById("busTitle").textContent = `Bus ${busId} Live Location`;
+    document.getElementById("busIdDisplay").textContent = `Tracking Bus ID: ${busId}`;
+
+    const backendUrl = "http://localhost:8080";  // Your backend URL
+    const errorElement = document.getElementById("error");
+    const waitingMessage = document.getElementById("waitingMessage");
+
+    let location = null;
+    let map = null;
+    let marker = null;
+    let polyline = null;
+    const pathCoordinates = []; // Store path history for polyline
+
+    // map
+    function initMap() {
+      map = L.map("map").setView([0, 0], 15); // Default view, will update with real location
+
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19
+      }).addTo(map);
+    }
+
+
+    function setLocation(lat, lon) {
+      if (!map) return;
+
+      // Add
+      pathCoordinates.push([lat, lon]);
+
+      // Create or update polyline
+      if (!polyline) {
+        polyline = L.polyline(pathCoordinates, {color: 'blue'}).addTo(map);
+      } else {
+        polyline.setLatLngs(pathCoordinates);
+      }
+
+
+      if (!marker) {
+        marker = L.marker([lat, lon]).addTo(map);
+      } else {
+        marker.setLatLng([lat, lon]);
+      }
+
+      map.setView([lat, lon], 15);
+      waitingMessage.style.display = "none";
+    }
+
+
+    function createEventSource() {
+      const eventSourceUrl = `${backendUrl}/send-location/${busId}`;
+      const eventSource = new EventSource(eventSourceUrl);
+
+      console.log(`Connecting to EventSource for bus ${busId}:`, eventSourceUrl);
+
+      eventSource.onopen = () => {
+        console.log("EventSource connection opened.");
+      };
+
+      eventSource.onmessage = (event) => {
+        console.log("Received location update:", event.data);
+
+        try {
+          const parsedData = JSON.parse(event.data);
+          console.log("Parsed location data:", parsedData);
+
+          if (parsedData.latitude && parsedData.longitude) {
+            location = parsedData;
+            setLocation(parsedData.latitude, parsedData.longitude);
+          } else {
+            throw new Error("Invalid location data format");
+          }
+        } catch (error) {
+          console.error("Error parsing location data:", error);
+          errorElement.style.display = "block";
+          errorElement.textContent = "Error processing location data. Please refresh.";
+        }
+      };
+
+      eventSource.onerror = (error) => {
+        console.error("EventSource error:", error);
+        errorElement.style.display = "block";
+        errorElement.textContent = "Connection error. Please try again later.";
+        eventSource.close();
+
+
+        setTimeout(createEventSource, 5000);
+      };
+
+
+      window.addEventListener("beforeunload", () => {
+        eventSource.close();
+      });
+    }
+
+    initMap();
+    createEventSource();
+  });
+</script>
+</body>
+</html>
