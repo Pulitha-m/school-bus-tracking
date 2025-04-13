@@ -9,14 +9,15 @@ function App() {
   return (
     <div className="w-full min-h-screen bg-gray-50">
       {
-        /* <StudentDashboard></StudentDashboard> 
-        <DriverDashboard></DriverDashboard> */
-        /*  <AdminDashboard /> */
-        <BrowserRouter>
+        /*<StudentDashboard></StudentDashboard>*/
+        // <DriverDashboard></DriverDashboard>
+        <AdminDashboard />
+        /*<BrowserRouter>
           <Routes>
             <Route path="/*" element={<OwnerDashboard />} />
           </Routes>
         </BrowserRouter>
+        */
       }
     </div>
   );
