@@ -2,7 +2,9 @@ package com.BusTracking.backend.Service;
 
 
 
+import com.BusTracking.backend.Model.Payment;
 import com.BusTracking.backend.Model.User;
+import com.BusTracking.backend.Repository.PaymentRepo;
 import com.BusTracking.backend.Repository.UserRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;

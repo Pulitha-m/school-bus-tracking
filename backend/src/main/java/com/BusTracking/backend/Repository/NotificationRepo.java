@@ -1,6 +1,6 @@
 package com.BusTracking.backend.Repository;
 
-import com.Safetrack.back.Model.Notification;
+import com.BusTracking.backend.Model.Notification;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
