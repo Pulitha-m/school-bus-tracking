@@ -21,7 +21,7 @@ const ShareLocation = () => {
     const { id } = JSON.parse(sessionData);
 
     axios
-      .get(`${backendUrl}/getDriverById/${id}`)
+      .get(`${backendUrl}/getDriverById/${id}`, { withCredentials: true })
       .then((res) => setBusId(res.data.busId))
       .catch(() => toast.error("Failed to fetch bus info"));
   }, []);
@@ -68,7 +68,8 @@ const ShareLocation = () => {
     try {
       const res = await axios.post(
         `${backendUrl}/update-location/${busId}`,
-        location
+        location,
+        { withCredentials: true }
       );
       setSubscriberCount(res.data.subscribers || 0);
 

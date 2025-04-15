@@ -30,7 +30,9 @@ const DriverProfile = () => {
     const { id } = JSON.parse(sessionData);
 
     axios
-      .get(`${backendUrl}/getDriverById/${id}`)
+      .get(`${backendUrl}/getDriverById/${id}`, {
+        withCredentials: true,
+      })
       .then((res) => {
         const data = res.data;
         setDriver(data);
@@ -48,7 +50,9 @@ const DriverProfile = () => {
 
         if (data.busId) {
           axios
-            .get(`${backendUrl}/getBusById/${data.busId}`)
+            .get(`${backendUrl}/getBusById/${data.busId}`, {
+              withCredentials: true,
+            })
             .then((res) => setBusInfo(res.data))
             .catch(() => toast.error("Failed to load bus info"));
         }
@@ -87,6 +91,7 @@ const DriverProfile = () => {
         updateForm,
         {
           headers: { "Content-Type": "multipart/form-data" },
+          withCredentials: true,
         }
       );
       setDriver(res.data);
