@@ -6,40 +6,50 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Configuration
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
-        httpSecurity
-                .csrf(csrf -> csrf.disable())  // Disable CSRF protection for stateless applications (like REST APIs)
-                .cors(cors -> cors.configurationSource(request -> {
-                    var corsConfiguration = new org.springframework.web.cors.CorsConfiguration();
-                    corsConfiguration.setAllowedOrigins(List.of("http://localhost:5173","https://607e-2402-d000-813c-1628-dd5b-b31d-b16b-4aba.ngrok-free.app","http://192.168.56.1:5173"));  // Allow your frontend
-                    corsConfiguration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE"));
-                    corsConfiguration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
-                    corsConfiguration.setAllowCredentials(true);  // Allow credentials (cookies) if needed
-                    return corsConfiguration;
-                }))
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+                .csrf(csrf -> csrf.disable()) // Disable CSRF for API endpoints
                 .authorizeHttpRequests(auth -> auth
-                        .anyRequest().permitAll()
-                               // .requestMatchers("/api/gps/**").permitAll()
-                               // .requestMatchers("/auth/**")
-                        // Allow all requests without authentication
+                        //.requestMatchers("/getDriverById/**").permitAll() // Explicitly allow this endpoint
+                        .anyRequest().permitAll() // Secure other endpoints
                 )
-                .formLogin(login -> login.disable())  // Correct way to disable form login
-                .httpBasic(basic -> basic.disable());
-                  // Default logout handling (optional, can be removed if logout is not needed)
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()));
 
-        return httpSecurity.build();
+        return http.build();
     }
 
+    @Bean
+    CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(Arrays.asList(
+                "https://0f68-2402-d000-8130-36d6-65c7-5365-c3e4-3a93.ngrok-free.app",
+                "http://localhost:5173"
+        ));
+        configuration.setAllowedMethods(Arrays.asList("GET","POST","PUT","DELETE","OPTIONS","HEAD"));
+        configuration.setAllowCredentials(true);
+        configuration.setAllowedHeaders(Arrays.asList("*"));
+        System.out.println("CORS Configuration Applied: " + configuration.getAllowedOrigins());
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
+
 }
