@@ -35,6 +35,7 @@ import { StudentProfile } from "./Pages/Student/StudentProfile";
 import StripePayment from "./Pages/components/StripePayment";
 import RegistrationSuccess from "./Pages/components/RegistrationSuccess";
 import { FinanceManagement } from "./Pages/Admin/FinanceManagement";
+import BusLocation from "./Pages/Student/BusLocation";
 
 const PublicLayout = () => {
   return (
@@ -113,6 +114,7 @@ export default function App() {
         <Route path="/student" element={<StudentLayout />}>
           <Route index element={<Navigate to="profile" />} />
           <Route path="profile" element={<StudentProfile />} />
+          <Route path="buslocation" element={<BusLocation />} />
           {/* <Route path="attendance" element={<AttendanceSection />} />
           <Route path="location" element={<LocationTracking />} />
           <Route path="notifications" element={<NotificationsSection />} />

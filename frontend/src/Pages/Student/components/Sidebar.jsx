@@ -34,7 +34,7 @@ const Sidebar = ({ mobileMenuOpen, setMobileMenuOpen }) => {
       id: "location",
       label: "Bus Location",
       icon: <MapPinIcon size={20} />,
-      path: "location",
+      path: "buslocation",
     },
     {
       id: "notifications",
