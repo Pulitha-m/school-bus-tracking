@@ -23,10 +23,12 @@ export function Sidebar({ mobileMenuOpen, setMobileMenuOpen }) {
   const location = useLocation();
 
   const navItems = [
-    { id: "dashboard", name: "Dashboard", icon: <BarChart3Icon size={20} /> },
+    { id: "dashboard",
+      name: "Dashboard",
+      icon: <BarChart3Icon size={20} /> },
     {
-      id: "driver-shifts",
-      name: "Driver shifts",
+      id: "driver-shift",
+      name: "Driver Attendance",
       icon: <UserIcon size={20} />,
     },
     {
@@ -34,7 +36,9 @@ export function Sidebar({ mobileMenuOpen, setMobileMenuOpen }) {
       name: "Student Management",
       icon: <UsersIcon size={20} />,
     },
-    { id: "drivers", name: "Driver Management", icon: <UserIcon size={20} /> },
+    { id: "drivers",
+      name: "Driver Management",
+      icon: <UserIcon size={20} /> },
     {
       id: "location",
       name: "Location Tracking",
@@ -45,7 +49,9 @@ export function Sidebar({ mobileMenuOpen, setMobileMenuOpen }) {
       name: "Attendance Logs",
       icon: <CalendarIcon size={20} />,
     },
-    { id: "vehicles", name: "Vehicle Info", icon: <TruckIcon size={20} /> },
+    { id: "vehicles",
+      name: "Vehicle Info",
+      icon: <TruckIcon size={20} /> },
     {
       id: "finance",
       name: "Finance Management",
@@ -56,8 +62,14 @@ export function Sidebar({ mobileMenuOpen, setMobileMenuOpen }) {
       name: "Career Requests",
       icon: <BriefcaseIcon size={20} />,
     },
-    { id: "feedback", name: "Feedback", icon: <MessageSquareIcon size={20} /> },
-    { id: "inquiries", name: "Inquiries", icon: <HelpCircleIcon size={20} /> },
+    { id: "feedback",
+      name: "Feedback",
+      icon: <MessageSquareIcon size={20} />
+    },
+    { id: "inquiries",
+      name: "Inquiries",
+      icon: <HelpCircleIcon size={20} />
+    },
     {
       id: "routes",
       name: "Route Management",

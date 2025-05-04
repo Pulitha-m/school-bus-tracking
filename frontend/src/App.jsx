@@ -51,6 +51,11 @@ import AddAttendance from "./Pages/Student/AddAttendance";
 import { ExpectedStudentsSidebar } from "./Pages/Driver/ExpectedStudentsSidebar";
 import ExpectedStdMgt from "./Pages/Admin/ExpectedStdMgt";
 import StudentPayment from "./Pages/Student/StudentPayment";
+import DriverShift from "./Pages/Driver/DriverShift";
+import DriverAttendance, { ShiftManagement } from "./Pages/Admin/DriverAttendance";
+
+// changes
+import StudentFeedback from "./Pages/Student/StudentFeedback";
 
 const PublicLayout = () => {
   return (
@@ -123,6 +128,8 @@ export default function App() {
 
             {/* {location} */}
             <Route path="location" element={<AllBusLocations />} />
+            <Route path="driver-shift" element={<ShiftManagement />} />
+
           </Route>
         </Route>
 
@@ -143,6 +150,7 @@ export default function App() {
             <Route path="qrcode" element={<QRScanner />} />
             <Route path="notifications" element={<NotificationManagement />} />
             <Route path="exstudent" element={<ExpectedStudentsSidebar />} />
+            <Route path="shift" element={<DriverShift />} />
           </Route>
         </Route>
 
@@ -155,6 +163,10 @@ export default function App() {
           <Route path="notifications" element={<Notifications />} />
           {
             /* <Route path="attendance" element={<AttendanceSection />} />
+
+          <Route path="feedback" element={<StudentFeedback />} />
+
+          {/* <Route path="attendance" element={<AttendanceSection />} />
           <Route path="location" element={<LocationTracking />} />
           <Route path="notifications" element={<NotificationsSection />} />
           <Route path="payments" element={<PaymentSection />} />
