@@ -68,6 +68,11 @@ export function Sidebar({ mobileMenuOpen, setMobileMenuOpen }) {
       name: "Notification",
       icon: <BellIcon size={20} />,
     },
+    {
+      id: "expectedStd",
+      name: "Expected Students",
+      icon: <UsersIcon size={20} />,
+    },
   ];
 
   const sidebarClasses = `
