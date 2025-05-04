@@ -1,18 +1,31 @@
 package com.BusTracking.backend.Controller;
 
+import com.BusTracking.backend.Model.Bus;
+import com.BusTracking.backend.Model.BusLocationHistory;
 import com.BusTracking.backend.Model.Location;
+import com.BusTracking.backend.Repository.BusLocationHistoryRepo;
+import com.BusTracking.backend.Service.BusService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
+import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @RestController
 public class BusLocationController {
+
+    @Autowired
+    private BusLocationHistoryRepo busLocationHistoryRepo;
+
+    @Autowired
+    private BusService busService;
 
     private final Map<String, SseEmitter> busLocationEmitters = new ConcurrentHashMap<>();
     private final Map<String, AtomicInteger> subscriberCounts = new ConcurrentHashMap<>();
@@ -55,6 +68,29 @@ public class BusLocationController {
     // Endpoint to receive bus location updates (called by driver)
     @PostMapping("/update-location/{busId}")
     public ResponseEntity<?> updateLocation(@PathVariable String busId, @RequestBody Location location) {
+
+        Long busIdLong;
+        try {
+            busIdLong = Long.parseLong(busId);
+        } catch (NumberFormatException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "status", "error",
+                    "message", "Invalid bus ID format",
+                    "busId", busId
+            ));
+        }
+
+        Bus bus = busService.getBusById(busIdLong);
+        String noPlate = (bus != null) ? bus.getNoPlate() : "UNKNOWN";
+
+        BusLocationHistory history = new BusLocationHistory();
+        history.setBusId(busId);
+        history.setLatitude(location.getLatitude());
+        history.setLongitude(location.getLongitude());
+        history.setTimestamp(new Date());
+        history.setNoPlate(noPlate);
+
+        busLocationHistoryRepo.save(history);
         // Get the SseEmitter associated with the busId
         SseEmitter emitter = busLocationEmitters.get(busId);
         int subscriberCount = subscriberCounts.getOrDefault(busId, new AtomicInteger(0)).get();
@@ -87,4 +123,19 @@ public class BusLocationController {
             ));
         }
     }
+
+
+    @GetMapping("/location-history/{busId}")
+    public ResponseEntity<List<BusLocationHistory>> getLocationHistory(@PathVariable String busId) {
+        List<BusLocationHistory> history = busLocationHistoryRepo.findByBusIdOrderByTimestampDesc(busId);
+        return ResponseEntity.ok(history);
+    }
+
+    @GetMapping("/all-current-locations")
+    public ResponseEntity<List<BusLocationHistory>> getAllLatestLocations() {
+        List<BusLocationHistory> latestLocations = busLocationHistoryRepo.findLatestLocations();
+        return ResponseEntity.ok(latestLocations);
+    }
+
+
 }

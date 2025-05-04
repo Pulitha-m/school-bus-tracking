@@ -68,8 +68,8 @@ public class DriverController {
         return driverService.deleteDriver(driverId);
     }
 
-    @GetMapping("/getDriverByEmail")
-    public ResponseEntity<Driver> getDriverByEmail(@RequestParam String email) {
+    @GetMapping("/getDriverByEmail/{email}")
+    public ResponseEntity<Driver> getDriverByEmail(@PathVariable String email) {
         Driver driver = driverService.getDriverByEmail(email);
         if (driver != null) {
             return ResponseEntity.ok(driver);

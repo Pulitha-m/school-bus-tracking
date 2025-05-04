@@ -1,82 +1,128 @@
-import React from "react";
-import {
-  MapPinIcon,
-  BarChart3Icon,
-  UserCheckIcon,
-  UsersIcon,
-  TruckIcon,
-  CreditCardIcon,
-} from "lucide-react";
-export const FeaturesSection = () => {
-  // Theme color is blue for the 10% requirement
-  const themeColor = "#1a56db";
+import React, { useRef, useState, useEffect } from "react";
+import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
+import { Parallax } from "react-scroll-parallax";
+
+const KeyFeaturesSection = () => {
+  const scrollRef = useRef(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveIndex((prevIndex) => {
+        const newIndex = (prevIndex + 1) % features.length;
+        scrollToIndex(newIndex);
+        return newIndex;
+      });
+    }, 5000); // 5000ms = 5 seconds
+
+    return () => clearInterval(interval); // Cleanup on unmount
+  }, []);
+
   const features = [
     {
-      icon: <MapPinIcon size={32} className="text-yellow-400" />,
       title: "Live Tracking",
-      description:
-        "Monitor bus location in real-time with GPS precision for peace of mind.",
+      subtitle:
+        "Track your child’s bus in real-time with live GPS updates and route visibility.",
+      image: "/track.jpg",
     },
     {
-      icon: <BarChart3Icon size={32} className="text-yellow-400" />,
-      title: "Route Optimization",
-      description:
-        "Efficient routes to reduce waiting times and fuel consumption.",
+      title: "Smart Attendance",
+      subtitle:
+        "Get instant alerts when your child boards or exits the bus, ensuring safety and accountability.",
+      image: "/attendance2.jpg",
     },
     {
-      icon: <UserCheckIcon size={32} className="text-yellow-400" />,
-      title: "Student Attendance",
-      description: "QR-based smart check-ins for accurate attendance tracking.",
+      title: "Secure Payments",
+      subtitle:
+        "Easily manage transport fees with transparent, digital payment options and receipts.",
+      image: "/payment.jpg",
     },
     {
-      icon: <TruckIcon size={32} className="text-yellow-400" />,
-      title: "Driver Management",
-      description:
-        "Manage vehicles and drivers effortlessly with comprehensive tools.",
+      title: "Instant Notifications",
+      subtitle:
+        "Receive real-time alerts about delays, bus arrivals, or unexpected route changes.",
+      image: "/notifications.jpg",
     },
     {
-      icon: <UsersIcon size={32} className="text-yellow-400" />,
-      title: "Parent Portal",
-      description:
-        "Real-time bus tracking for guardians to know exactly when to expect their children.",
-    },
-    {
-      icon: <CreditCardIcon size={32} className="text-yellow-400" />,
-      title: "Payment System",
-      description:
-        "Distance-based automated billing for transparent financial management.",
+      title: "Optimized Routes",
+      subtitle:
+        "Reduce waiting times with intelligently planned bus routes for faster pickups and drop-offs.",
+      image: "/optimized-routes.jpg",
     },
   ];
+
+  const scrollToIndex = (index) => {
+    const container = scrollRef.current;
+    if (!container) return;
+    const width = container.offsetWidth;
+    container.scrollTo({ left: width * index, behavior: "smooth" });
+    setActiveIndex(index);
+  };
+
+  const handlePrev = () => {
+    const newIndex = activeIndex === 0 ? features.length - 1 : activeIndex - 1;
+    scrollToIndex(newIndex);
+  };
+
+  const handleNext = () => {
+    const newIndex = (activeIndex + 1) % features.length;
+    scrollToIndex(newIndex);
+  };
+
   return (
-    <section className="py-16 bg-white" id="features">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">Key Features</h2>
-          <div className="h-1 w-24 bg-yellow-400 mx-auto"></div>
-          <p className="mt-6 text-gray-600 max-w-2xl mx-auto">
-            Our comprehensive system offers everything you need to manage your
-            school bus fleet efficiently and safely.
-          </p>
+    <section className="w-full bg-white text-black py-16 px-4">
+      <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-stretch h-auto lg:h-[600px]">
+        {/* Left: Scrollable Images with Parallax */}
+        <div className="relative w-full lg:w-2/3 h-[300px] sm:h-[400px] lg:h-[600px] mb-10 lg:mb-0">
+          {/* Scroll Buttons */}
+          <button
+            onClick={handlePrev}
+            className="absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-white text-black p-2 rounded-full shadow-md hover:bg-gray-200"
+          >
+            <ChevronLeftIcon className="w-5 h-5" />
+          </button>
+          <button
+            onClick={handleNext}
+            className="absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-white text-black p-2 rounded-full shadow-md hover:bg-gray-200"
+          >
+            <ChevronRightIcon className="w-5 h-5" />
+          </button>
+
+          <div
+            ref={scrollRef}
+            className="flex overflow-hidden snap-x snap-mandatory scroll-smooth h-full"
+          >
+            {features.map((feature, index) => (
+              <Parallax
+                key={index}
+                speed={-5}
+                className="flex-none w-full snap-start relative"
+              >
+                <img
+                  src={feature.image}
+                  alt={feature.title}
+                  className="w-full h-full object-cover"
+                />
+              </Parallax>
+            ))}
+          </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {features.map((feature, index) => (
-            <div
-              key={index}
-              className="bg-white p-6 rounded-lg transition-all hover:shadow-lg border border-gray-100"
-            >
-              <div className="mb-4">{feature.icon}</div>
-              <h3 className="text-xl font-semibold mb-3">{feature.title}</h3>
-              <p className="text-gray-600">{feature.description}</p>
-              <div
-                className="mt-4 h-1 w-12"
-                style={{
-                  backgroundColor: themeColor,
-                }}
-              ></div>
-            </div>
-          ))}
+
+        {/* Right: Static Description */}
+        <div className="w-full lg:w-1/3 bg-black text-white flex flex-col justify-center px-6 sm:px-10 py-8 rounded-2xl">
+          <p className="text-3xl sm:text-4xl md:text-5xl font-extrabold leading-tight tracking-tight mb-4">
+            KEY <br /> FEATURES
+          </p>
+          <h2 className="text-2xl font-bold mb-2">
+            {features[activeIndex].title}
+          </h2>
+          <p className="text-white/80 text-lg">
+            {features[activeIndex].subtitle}
+          </p>
         </div>
       </div>
     </section>
   );
 };
+
+export default KeyFeaturesSection;

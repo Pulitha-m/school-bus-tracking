@@ -10,58 +10,47 @@ import {
 } from "lucide-react";
 
 export const Footer = () => {
-  const themeColor = "#333333"; // Greyish black background
-  const iconColor = "#ffffff"; // White icons and text
-
   return (
-    <footer style={{ backgroundColor: themeColor }}>
-      <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+    <footer className="bg-[#1f1f1f] text-white">
+      <div className="max-w-7xl mx-auto px-6 py-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12">
           {/* Logo & About */}
           <div>
             <div className="flex items-center mb-4">
-              <MapPinIcon size={24} style={{ color: iconColor }} />
-              <span
-                className="ml-2 text-xl font-bold"
-                style={{ color: iconColor }}
-              >
+              <MapPinIcon className="w-5 h-5 text-white" />
+              <span className="ml-2 text-xl font-bold text-white">
                 BusTracker
               </span>
             </div>
-            <p className="mb-4" style={{ color: iconColor }}>
-              Innovative school bus tracking and management solutions for safer
-              student transportation.
+            <p className="text-sm text-white/80 mb-4">
+              Innovative school bus tracking solutions for safer, smarter
+              student transportation across the island.
             </p>
-            <div className="flex space-x-4">
-              <a href="#" className="hover:opacity-80 transition-opacity">
-                <FacebookIcon size={20} style={{ color: iconColor }} />
-              </a>
-              <a href="#" className="hover:opacity-80 transition-opacity">
-                <TwitterIcon size={20} style={{ color: iconColor }} />
-              </a>
-              <a href="#" className="hover:opacity-80 transition-opacity">
-                <InstagramIcon size={20} style={{ color: iconColor }} />
-              </a>
-              <a href="#" className="hover:opacity-80 transition-opacity">
-                <LinkedinIcon size={20} style={{ color: iconColor }} />
-              </a>
+            <div className="flex space-x-4 mt-4">
+              {[FacebookIcon, TwitterIcon, InstagramIcon, LinkedinIcon].map(
+                (Icon, idx) => (
+                  <a
+                    key={idx}
+                    href="#"
+                    className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition"
+                  >
+                    <Icon className="w-4 h-4 text-white" />
+                  </a>
+                )
+              )}
             </div>
           </div>
 
           {/* Quick Links */}
           <div>
-            <h3 className="font-semibold mb-4" style={{ color: iconColor }}>
+            <h3 className="text-lg font-semibold mb-4 text-white">
               Quick Links
             </h3>
-            <ul className="space-y-2">
-              {["Home", "Features", "Routes", "Careers", "Contact"].map(
+            <ul className="space-y-2 text-sm text-white/80">
+              {["Home", "Features", "About", "Contact", "Careers"].map(
                 (item, index) => (
                   <li key={index}>
-                    <a
-                      href="#"
-                      className="hover:opacity-80 transition-opacity"
-                      style={{ color: iconColor }}
-                    >
+                    <a href="#" className="hover:text-white transition">
                       {item}
                     </a>
                   </li>
@@ -70,60 +59,45 @@ export const Footer = () => {
             </ul>
           </div>
 
-          {/* Contact */}
+          {/* Contact Info */}
           <div>
-            <h3 className="font-semibold mb-4" style={{ color: iconColor }}>
+            <h3 className="text-lg font-semibold mb-4 text-white">
               Contact Us
             </h3>
-            <ul className="space-y-3">
+            <ul className="space-y-4 text-sm text-white/80">
               <li className="flex items-start">
-                <PhoneIcon
-                  size={18}
-                  className="mr-2 mt-1"
-                  style={{ color: iconColor }}
-                />
-                <span style={{ color: iconColor }}>(555) 123-4567</span>
+                <PhoneIcon className="w-4 h-4 mr-3 mt-1 text-yellow-400" />
+                (555) 123-4567
               </li>
               <li className="flex items-start">
-                <MailIcon
-                  size={18}
-                  className="mr-2 mt-1"
-                  style={{ color: iconColor }}
-                />
-                <span style={{ color: iconColor }}>info@bustracker.com</span>
+                <MailIcon className="w-4 h-4 mr-3 mt-1 text-yellow-400" />
+                info@bustracker.com
               </li>
               <li className="flex items-start">
-                <MapPinIcon
-                  size={18}
-                  className="mr-2 mt-1"
-                  style={{ color: iconColor }}
-                />
-                <span style={{ color: iconColor }}>
-                  123 Tracking Ave, Transportation City, TC 12345
-                </span>
+                <MapPinIcon className="w-4 h-4 mr-3 mt-1 text-yellow-400" />
+                123 Tracking Ave, Transportation City
               </li>
             </ul>
           </div>
 
           {/* Newsletter */}
           <div>
-            <h3 className="font-semibold mb-4" style={{ color: iconColor }}>
+            <h3 className="text-lg font-semibold mb-4 text-white">
               Stay Updated
             </h3>
-            <p className="mb-4" style={{ color: iconColor }}>
-              Subscribe to our newsletter for updates and news.
+            <p className="text-sm text-white/80 mb-4">
+              Subscribe to get news, updates, and feature releases.
             </p>
-            <form className="flex">
+            <form className="flex w-full">
               <input
                 type="email"
                 placeholder="Your email"
-                className="px-4 py-2 w-full border border-gray-600 bg-transparent rounded-l-md focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                style={{ color: iconColor }}
+                className="w-full px-4 py-2 rounded-l-md bg-white/10 border border-white/20 placeholder-white/50 text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                required
               />
               <button
                 type="submit"
-                className="bg-yellow-400 px-4 py-2 rounded-r-md hover:bg-yellow-500 transition-colors"
-                style={{ color: themeColor }}
+                className="bg-yellow-400 px-4 py-2 rounded-r-md text-black font-semibold hover:bg-yellow-500 transition"
               >
                 Subscribe
               </button>
@@ -131,26 +105,15 @@ export const Footer = () => {
           </div>
         </div>
 
-        {/* Footer Bottom */}
-        <div className="mt-12 pt-8 border-t border-gray-600">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <p className="text-sm" style={{ color: iconColor }}>
-              © {new Date().getFullYear()} BusTracker. All rights reserved.
-            </p>
-            <div className="flex space-x-6 mt-4 md:mt-0">
-              {["Privacy Policy", "Terms of Service", "Cookie Policy"].map(
-                (item, index) => (
-                  <a
-                    key={index}
-                    href="#"
-                    className="text-sm hover:opacity-80 transition-opacity"
-                    style={{ color: iconColor }}
-                  >
-                    {item}
-                  </a>
-                )
-              )}
-            </div>
+        {/* Bottom Footer */}
+        <div className="mt-12 pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center text-sm text-white/60 gap-4">
+          <p>© {new Date().getFullYear()} BusTracker. All rights reserved.</p>
+          <div className="flex space-x-6">
+            {["Privacy Policy", "Terms", "Cookies"].map((item, index) => (
+              <a key={index} href="#" className="hover:text-white transition">
+                {item}
+              </a>
+            ))}
           </div>
         </div>
       </div>

@@ -25,8 +25,8 @@ export function Sidebar({ mobileMenuOpen, setMobileMenuOpen }) {
   const navItems = [
     { id: "dashboard", name: "Dashboard", icon: <BarChart3Icon size={20} /> },
     {
-      id: "driver-profile",
-      name: "Driver Profile",
+      id: "driver-shifts",
+      name: "Driver shifts",
       icon: <UserIcon size={20} />,
     },
     {
@@ -63,13 +63,18 @@ export function Sidebar({ mobileMenuOpen, setMobileMenuOpen }) {
       name: "Route Management",
       icon: <MapIcon size={20} />,
     },
+    {
+      id: "notifications",
+      name: "Notification",
+      icon: <BellIcon size={20} />,
+    },
   ];
 
   const sidebarClasses = `
     bg-amber-50 fixed md:static inset-y-0 left-0 transform 
     ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"} 
     md:translate-x-0 transition duration-200 ease-in-out
-    z-30 w-64 overflow-y-auto flex flex-col
+    z-30 w-72 overflow-y-auto flex flex-col
   `;
 
   return (

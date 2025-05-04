@@ -1,8 +1,7 @@
 import React from "react";
 import { StarIcon } from "lucide-react";
+
 export const TestimonialsSection = () => {
-  // Theme color is blue for the 10% requirement
-  const themeColor = "#1a56db";
   const testimonials = [
     {
       name: "Sarah Johnson",
@@ -32,24 +31,24 @@ export const TestimonialsSection = () => {
       rating: 4,
     },
   ];
+
   return (
-    <section className="py-16 bg-white">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            What People Are Saying
-          </h2>
-          <div className="h-1 w-24 bg-yellow-400 mx-auto"></div>
-          <p className="mt-6 text-gray-600 max-w-2xl mx-auto">
-            Hear from parents, administrators, and drivers who use our system
-            every day.
-          </p>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+    <section className="py-24 bg-white">
+      <div className="max-w-7xl mx-auto px-6 text-center">
+        <h2 className="text-4xl sm:text-5xl font-extrabold mb-4 text-black">
+          What People Are Saying
+        </h2>
+        <div className="h-1 w-24 bg-yellow-400 mx-auto mb-6"></div>
+        <p className="text-gray-600 max-w-2xl mx-auto mb-12 text-lg">
+          Hear directly from parents, school administrators, and drivers using
+          our system every day.
+        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
           {testimonials.map((testimonial, index) => (
             <div
               key={index}
-              className="bg-white p-6 rounded-lg shadow-md border border-gray-100 hover:shadow-lg transition-shadow"
+              className="bg-white border border-gray-200 rounded-xl shadow-xl p-6 hover:shadow-2xl transition-all"
             >
               <div className="flex items-center mb-4">
                 {[...Array(5)].map((_, i) => (
@@ -62,29 +61,29 @@ export const TestimonialsSection = () => {
                   />
                 ))}
               </div>
-              <p className="text-gray-600 italic mb-6">"{testimonial.quote}"</p>
+              <p className="text-gray-700 italic mb-6 leading-relaxed">
+                “{testimonial.quote}”
+              </p>
               <div className="flex items-center">
                 <img
                   src={testimonial.image}
                   alt={testimonial.name}
-                  className="h-12 w-12 rounded-full object-cover mr-4"
+                  className="h-12 w-12 rounded-full object-cover mr-4 border-2 border-yellow-400"
                 />
-                <div>
-                  <h4 className="font-semibold">{testimonial.name}</h4>
+                <div className="text-left">
+                  <h4 className="font-semibold text-gray-900">
+                    {testimonial.name}
+                  </h4>
                   <p className="text-sm text-gray-500">{testimonial.role}</p>
                 </div>
               </div>
-              <div
-                className="mt-4 h-1 w-12"
-                style={{
-                  backgroundColor: themeColor,
-                }}
-              ></div>
+              <div className="mt-4 h-1 w-12 bg-yellow-400 rounded-full"></div>
             </div>
           ))}
         </div>
-        <div className="mt-12 text-center">
-          <button className="text-gray-800 border-b-2 border-yellow-400 font-medium inline-flex items-center hover:border-yellow-500 transition-colors">
+
+        <div className="mt-12">
+          <button className="bg-yellow-400 text-black px-6 py-3 rounded-full font-semibold shadow-md hover:bg-yellow-500 transition">
             See More Stories
           </button>
         </div>

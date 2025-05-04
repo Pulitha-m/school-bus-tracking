@@ -377,6 +377,54 @@ import { Loader } from "@googlemaps/js-api-loader";
 import { NavigationIcon, RouteIcon, ArrowUpRightIcon } from "lucide-react";
 import backendUrl from "../../config/config";
 
+// Function to calculate the distance between two points using the Haversine formula
+const calculateDistance = (lat1, lng1, lat2, lng2) => {
+  const R = 6371; // Earth's radius in km
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLng = (lng2 - lng1) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) *
+      Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLng / 2) *
+      Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c; // Distance in km
+};
+
+// Function to reorder waypoints by calculating the nearest neighbor (optimized waypoints)
+const reorderWaypoints = (start, waypoints) => {
+  let currentPoint = start;
+  let remainingWaypoints = [...waypoints];
+  let orderedWaypoints = [];
+
+  while (remainingWaypoints.length > 0) {
+    let closestWaypoint = null;
+    let closestDistance = Infinity;
+
+    remainingWaypoints.forEach((wp) => {
+      const dist = calculateDistance(
+        currentPoint.lat,
+        currentPoint.lng,
+        wp.lat,
+        wp.lng
+      );
+      if (dist < closestDistance) {
+        closestWaypoint = wp;
+        closestDistance = dist;
+      }
+    });
+
+    orderedWaypoints.push(closestWaypoint);
+    currentPoint = closestWaypoint;
+    remainingWaypoints = remainingWaypoints.filter(
+      (wp) => wp !== closestWaypoint
+    );
+  }
+
+  return orderedWaypoints;
+};
+
 const StudentLocationTracking = () => {
   const mapContainer = useRef(null);
   const mapRef = useRef(null);
@@ -504,22 +552,27 @@ const StudentLocationTracking = () => {
     setError(null);
 
     try {
+      // Fetch route data
       const res = await fetch(`${backendUrl}/getRouteById/${routeId}`);
       const data = await res.json();
       const studentPickups = data.studentPickups || [];
       const schools = data.schools || [];
 
+      // Combine all waypoints (start, end, student pickups, schools)
       const waypoints = [
-        ...studentPickups.map((p) => ({
-          lat: p.latitude,
-          lng: p.longitude,
-        })),
-        ...schools.map((s) => ({
-          lat: s.latitude,
-          lng: s.longitude,
-        })),
+        { lat: data.startLat, lng: data.startLng }, // Start point
+        ...studentPickups.map((p) => ({ lat: p.latitude, lng: p.longitude })), // Student pickups
+        ...schools.map((s) => ({ lat: s.latitude, lng: s.longitude })), // Schools
+        { lat: data.endLat, lng: data.endLng }, // End point
       ];
 
+      // Optimize the waypoints order based on distance (Nearest Neighbor algorithm)
+      const optimizedWaypoints = reorderWaypoints(
+        { lat: data.startLat, lng: data.startLng },
+        waypoints.slice(1, -1) // Exclude start and end points
+      );
+
+      // Construct the routing request with optimized waypoints
       const requestBody = {
         origin: {
           location: {
@@ -531,13 +584,14 @@ const StudentLocationTracking = () => {
             latLng: { latitude: data.endLat, longitude: data.endLng },
           },
         },
-        intermediates: waypoints.map((wp) => ({
+        intermediates: optimizedWaypoints.map((wp) => ({
           location: { latLng: { latitude: wp.lat, longitude: wp.lng } },
         })),
         travelMode: "DRIVE",
         routingPreference: "TRAFFIC_AWARE_OPTIMAL",
       };
 
+      // Fetch the polyline for the route
       const routeResponse = await fetch(
         `https://routes.googleapis.com/directions/v2:computeRoutes?key=${apiKey}`,
         {
@@ -550,16 +604,36 @@ const StudentLocationTracking = () => {
         }
       );
 
+      // Check if the response is successful
+      if (!routeResponse.ok) {
+        const errorMessage = await routeResponse.text(); // Log the detailed error
+        throw new Error(
+          `Error fetching route data: ${routeResponse.statusText} - ${errorMessage}`
+        );
+      }
+
       const routeData = await routeResponse.json();
+
+      // Check if the routes array is available and contains data
+      if (!routeData.routes || routeData.routes.length === 0) {
+        throw new Error("No route found in the response.");
+      }
+
+      // Extract polyline from the first route
       const polyline = routeData.routes[0]?.polyline?.encodedPolyline;
 
-      if (!polyline) throw new Error("No route found");
+      if (!polyline) {
+        throw new Error("No polyline found in the route data.");
+      }
 
+      // Decode the polyline to get the coordinates
       const decodedPath =
         window.google.maps.geometry.encoding.decodePath(polyline);
 
+      // Clear any existing polyline
       if (routePolylineRef.current) routePolylineRef.current.setMap(null);
 
+      // Create a new polyline with the combined waypoints
       const routeLine = new window.google.maps.Polyline({
         path: decodedPath,
         map: mapRef.current,
@@ -568,18 +642,24 @@ const StudentLocationTracking = () => {
         strokeWeight: 5,
       });
 
+      // Store the reference to the new polyline
       routePolylineRef.current = routeLine;
+
+      // Set the route coordinates state
       setRouteCoordinates(
         decodedPath.map((latLng) => [latLng.lng(), latLng.lat()])
       );
+
+      // Add custom markers (start, end, student pickups, schools)
       addCustomMarkers(data, studentPickups, schools);
 
+      // Fit the map bounds to the route
       const bounds = new window.google.maps.LatLngBounds();
       decodedPath.forEach((point) => bounds.extend(point));
       mapRef.current.fitBounds(bounds);
     } catch (err) {
       console.error("Journey error:", err);
-      setError(err.message);
+      setError(err.message); // Set the error message to be displayed in the UI
     }
 
     setIsLoading(false);

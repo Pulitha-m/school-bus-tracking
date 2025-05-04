@@ -25,6 +25,14 @@ public class NotificationController {
     }
 
 
+    @GetMapping("/getAll")
+    public ResponseEntity<List<Notification>> getNotificationsByBus() {
+        List<Notification> notifications = notificationRepository.findAll();
+        return ResponseEntity.ok(notifications);
+    }
+
+
+
 
 
 
@@ -35,4 +43,27 @@ public class NotificationController {
         Notification savedNotification = notificationRepository.save(notification);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedNotification);
     }
+
+    @PutMapping("/update/{id}")
+    public ResponseEntity<Notification> updateNotification(@PathVariable Long id, @RequestBody Notification notification) {
+        // Check if notification exists
+        if (!notificationRepository.existsById(id)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null); // Return 404 if not found
+        }
+
+        // Set the ID and timestamp for the update
+        notification.setId(id);
+        notification.setTimestamp(new Date());
+        Notification updatedNotification = notificationRepository.save(notification);
+        return ResponseEntity.ok(updatedNotification);
+    }
+
+
+
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<String> deleteNotification(@PathVariable Long id) {
+        notificationRepository.deleteById(id);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Notification deleted successfully");
+    }
+
 }

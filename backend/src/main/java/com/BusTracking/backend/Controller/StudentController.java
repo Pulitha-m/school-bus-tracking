@@ -53,6 +53,21 @@ public class StudentController {
         }
     }
 
+    @GetMapping("/getStudentByEmail/{email}")
+    public ResponseEntity<Student> getStudentByEmail(@PathVariable String email) {
+        try {
+            // If student exists, return the student data
+            Student student = studentService.getStudentByUserUsername(email)
+                    .orElseThrow(() -> new RuntimeException("Student not found"));
+
+            return ResponseEntity.ok(student);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build(); // Return 404 if student not found
+        }
+    }
+
+
+
     // Get all students - NO CHANGES
     @GetMapping("/getAllStudents")
     public ResponseEntity<List<Student>> getAllStudents() {
@@ -85,4 +100,6 @@ public class StudentController {
     public ResponseEntity<List<Student>> getStudentsByBusId(@PathVariable Long busId) {
         return ResponseEntity.ok(studentService.getStudentsByBusId(busId));
 }
+
+
 }
