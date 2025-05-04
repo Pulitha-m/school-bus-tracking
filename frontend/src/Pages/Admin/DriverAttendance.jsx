@@ -220,6 +220,8 @@ return new Date(totalSeconds * 1000).toISOString().substr(11, 8);
 
     doc.save(`driver-shift-report-${currentDate.toISOString().slice(0, 10)}.pdf`);
   };
+};
+export default ShiftManagement;
 
   if (loading) {
     return <div className="p-6">Loading shifts...</div>;
