@@ -218,6 +218,7 @@ const MultiStepRegisterForm = () => {
         },
       };
 
+      // Register student
       const response = await axios.post(
         "http://localhost:8080/registerStudent",
         payload
@@ -225,6 +226,24 @@ const MultiStepRegisterForm = () => {
 
       if (response.data && response.data.id) {
         setStudentId(response.data.id);
+
+        // Add student pickup location to the route table
+        const params = new URLSearchParams();
+        params.append("latitude", formData.startLocation.lat);
+        params.append("longitude", formData.startLocation.lng);
+        params.append("studentEmail", formData.email);
+
+        // Send pickup data to server
+        await axios.post(
+          `http://localhost:8080/addStudentPickup/${formData.selectedRoute}`,
+          params,
+          {
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+          }
+        );
+
         setPaymentInfo({
           amount: formData.estimatedFare,
           email: formData.email,

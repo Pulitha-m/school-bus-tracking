@@ -1,114 +1,182 @@
-import React, { useState } from "react";
-import { MapPinIcon, MenuIcon, XIcon } from "lucide-react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { MapPinIcon, MenuIcon, XIcon, ChevronDownIcon } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const themeColor = "#333333";
-  const iconColor = "#ffffff";
+  const [showNavbar, setShowNavbar] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+  const navigate = useNavigate();
+
+  const scrollTo = (target) => {
+    navigate("/", { state: { scrollTo: target } });
+    setIsMenuOpen(false);
+  };
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      setShowNavbar(currentScrollY < lastScrollY || currentScrollY < 100);
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [lastScrollY]);
 
   return (
     <header
-      className="shadow-sm sticky top-0 z-50"
-      style={{ backgroundColor: themeColor }}
+      className={`bg-white fixed w-full z-50 transition-transform duration-300 ${
+        showNavbar ? "translate-y-0" : "-translate-y-full"
+      }`}
     >
-      <div className="container mx-auto px-4 py-4">
-        <div className="flex items-center justify-between">
-          {/* Logo */}
-          <Link to="/" className="flex items-center">
-            <MapPinIcon size={28} style={{ color: iconColor }} />
-            <span
-              className="ml-2 text-xl font-bold"
-              style={{ color: iconColor }}
-            >
-              SafeTrack
-            </span>
-          </Link>
+      <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+        {/* Logo */}
+        <div
+          className="flex items-center space-x-2 cursor-pointer"
+          onClick={() => scrollTo("hero")}
+        >
+          <MapPinIcon size={26} className="text-yellow-400" />
+          <span className="text-xl font-bold text-gray-900">SAFETRACK</span>
+        </div>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
-            {["Home", "Features", "Routes", "Careers", "Contact"].map(
-              (item, index) => (
-                <Link
-                  key={index}
-                  to={
-                    item === "Features" || item === "Contact"
-                      ? `/#${item.toLowerCase()}`
-                      : `/${item.toLowerCase()}`
-                  }
-                  className="border-b-2 border-transparent hover:border-yellow-400 pb-1 transition-all"
-                  style={{ color: iconColor }}
-                >
-                  {item}
-                </Link>
-              )
-            )}
-          </nav>
-
-          {/* Login/Sign Up Button */}
-          <div className="hidden md:block">
-            <Link
-              to="/auth"
-              className="bg-yellow-400 px-6 py-2 rounded-md font-medium hover:bg-yellow-500 transition-colors"
-              style={{
-                boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                color: themeColor,
-              }}
-            >
-              Login / Sign Up
-            </Link>
-          </div>
-
-          {/* Mobile Menu Button */}
+        {/* Desktop Nav */}
+        <nav className="hidden md:flex items-center space-x-6">
           <button
-            className="md:hidden"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            onClick={() => scrollTo("hero")}
+            className="text-sm font-medium text-gray-700 hover:text-gray-900"
           >
-            {isMenuOpen ? (
-              <XIcon size={24} style={{ color: iconColor }} />
-            ) : (
-              <MenuIcon size={24} style={{ color: iconColor }} />
-            )}
+            Home
+          </button>
+          <button
+            onClick={() => scrollTo("features")}
+            className="text-sm font-medium text-gray-700 hover:text-gray-900"
+          >
+            Features
+          </button>
+          <button
+            onClick={() => scrollTo("about")}
+            className="text-sm font-medium text-gray-700 hover:text-gray-900"
+          >
+            About Us
+          </button>
+          <button
+            onClick={() => scrollTo("feedbacks")}
+            className="text-sm font-medium text-gray-700 hover:text-gray-900"
+          >
+            Feedbacks
+          </button>
+          <button
+            onClick={() => navigate("/routes")}
+            className="text-sm font-medium text-gray-700 hover:text-gray-900"
+          >
+            Routes
+          </button>
+          <button
+            onClick={() => navigate("/careers")}
+            className="text-sm font-medium text-gray-700 hover:text-gray-900"
+          >
+            Careers
+          </button>
+        </nav>
+
+        {/* Right buttons */}
+        <div className="hidden md:flex items-center space-x-4">
+          <div className="flex items-center space-x-1 cursor-pointer">
+            <span className="text-sm text-gray-700">EN</span>
+            <ChevronDownIcon size={16} className="text-gray-700" />
+          </div>
+          <button
+            onClick={() => navigate("/auth")}
+            className="text-sm font-medium text-gray-700 hover:text-gray-900"
+          >
+            SIGN IN
+          </button>
+          <button
+            onClick={() => scrollTo("contact")}
+            className="bg-black text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-800"
+          >
+            Contact
           </button>
         </div>
 
-        {/* Mobile Menu */}
-        {isMenuOpen && (
-          <nav className="md:hidden mt-4 pb-4">
-            <div className="flex flex-col space-y-4">
-              {["Home", "Features", "Routes", "Careers", "Contact"].map(
-                (item, index) => (
-                  <Link
-                    key={index}
-                    to={
-                      item === "Features" || item === "Contact"
-                        ? `/#${item.toLowerCase()}`
-                        : `/${item.toLowerCase()}`
-                    }
-                    className="py-2 border-b border-gray-100"
-                    style={{ color: iconColor }}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    {item}
-                  </Link>
-                )
-              )}
-              {/* Mobile Login/Sign Up Button */}
-              <Link
-                to="/auth"
-                className="bg-yellow-400 px-6 py-2 rounded-md font-medium hover:bg-yellow-500 transition-colors text-center"
-                style={{
-                  boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                  color: themeColor,
-                }}
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Login / Sign Up
-              </Link>
-            </div>
-          </nav>
-        )}
+        {/* Mobile Toggle */}
+        <button
+          className="md:hidden"
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+        >
+          {isMenuOpen ? (
+            <XIcon size={24} className="text-gray-800" />
+          ) : (
+            <MenuIcon size={24} className="text-gray-800" />
+          )}
+        </button>
       </div>
+
+      {/* Mobile Menu */}
+      {isMenuOpen && (
+        <div className="md:hidden px-4 pb-4 bg-white">
+          <div className="flex flex-col space-y-4">
+            <button
+              onClick={() => scrollTo("hero")}
+              className="text-gray-700 text-sm"
+            >
+              Home
+            </button>
+            <button
+              onClick={() => scrollTo("features")}
+              className="text-gray-700 text-sm"
+            >
+              Features
+            </button>
+            <button
+              onClick={() => scrollTo("about")}
+              className="text-gray-700 text-sm"
+            >
+              About Us
+            </button>
+            <button
+              onClick={() => scrollTo("feedbacks")}
+              className="text-gray-700 text-sm"
+            >
+              Feedbacks
+            </button>
+            <button
+              onClick={() => {
+                navigate("/routes");
+                setIsMenuOpen(false);
+              }}
+              className="text-gray-700 text-sm"
+            >
+              Routes
+            </button>
+            <button
+              onClick={() => {
+                navigate("/careers");
+                setIsMenuOpen(false);
+              }}
+              className="text-gray-700 text-sm"
+            >
+              Careers
+            </button>
+            <button
+              onClick={() => {
+                navigate("/auth");
+                setIsMenuOpen(false);
+              }}
+              className="text-gray-700 text-sm"
+            >
+              SIGN IN
+            </button>
+            <button
+              onClick={() => scrollTo("contact")}
+              className="bg-black text-white px-4 py-2 rounded-md text-sm font-medium"
+            >
+              Contact
+            </button>
+          </div>
+        </div>
+      )}
     </header>
   );
 };

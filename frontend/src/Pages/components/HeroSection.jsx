@@ -1,77 +1,115 @@
-import React from "react";
-import { ArrowRightIcon } from "lucide-react";
-import sbs from "./sbs.png";
+import React, { memo } from "react";
+import PropTypes from "prop-types";
+import { MapContainer, TileLayer } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import { Parallax } from "react-scroll-parallax";
+import { motion } from "framer-motion";
 
-export const HeroSection = () => {
+const headlineWords = ["TRAVEL", "WITH", "CONFIDENCE"];
+
+const wordVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: (i) => ({
+    opacity: 1,
+    y: 0,
+    transition: {
+      delay: i * 0.4,
+      duration: 0.6,
+    },
+  }),
+};
+
+const HeroSection = ({ center = [40.7128, -74.006], zoom = 13 }) => {
   return (
-    <section className="relative overflow-hidden">
-      <div className="container mx-auto px-4 py-12 md:py-20 lg:py-24">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-          {/* Text Content */}
-          <div className="z-10 ml-4 md:ml-8 lg:ml-12">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4 md:mb-6">
-              Smart School Bus Tracking Made Easy
-            </h1>
-            <p className="text-base md:text-lg text-gray-700 mb-6 md:mb-8 max-w-lg">
-              Real-time location tracking, attendance, and optimized routes for
-              safety and efficiency. Keep your students safe and parents
-              informed.
-            </p>
-            <button
-              className="bg-yellow-400 text-gray-800 px-6 py-2 md:px-8 md:py-3 rounded-md font-medium text-base md:text-lg inline-flex items-center hover:bg-yellow-500 transition-colors"
-              style={{
-                boxShadow: "0 4px 14px rgba(0,0,0,0.1)",
-              }}
-            >
-              Get Started
-              <ArrowRightIcon size={18} className="ml-2" />
-            </button>
-          </div>
+    <section className="relative w-full bg-white pt-32">
+      {/* Background Map */}
+      <div className="absolute inset-0 flex items-center justify-center z-0 px-2 pt-2">
+        <div className="w-full max-w-[1600px] h-[600px] rounded-[24px] overflow-hidden shadow-lg -mt-9">
+          <MapContainer
+            center={center}
+            zoom={zoom}
+            style={{ width: "100%", height: "100%" }}
+            zoomControl={false}
+            attributionControl={false}
+          >
+            <TileLayer
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              opacity={0.95}
+            />
+          </MapContainer>
+        </div>
+      </div>
 
-          {/* Circular Image Container - Increased Width */}
-          <div className="relative z-10 flex justify-center md:justify-end mr-4 md:mr-8 lg:mr-12">
-            <div className="relative h-83 w-86 sm:h-[23rem] sm:w-[26rem] md:h-[27rem] md:w-[30rem] lg:h-[31rem] lg:w-[34rem] rounded-full overflow-hidden border-4 border-white shadow-xl">
-              <img
-                src={sbs}
-                alt="School bus tracking map interface"
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-br from-transparent to-yellow-400/20 pointer-events-none rounded-full"></div>
-              {/* Animated bus marker */}
-              <div
-                className="absolute"
-                style={{
-                  top: "40%",
-                  left: "60%",
-                  animation: "pulse 2s infinite",
-                }}
-              >
-                <div className="h-4 w-4 md:h-5 md:w-5 rounded-full bg-yellow-400 ring-3 md:ring-4 ring-yellow-400/30"></div>
-              </div>
+      {/* Foreground White Card */}
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-20">
+        <div className="bg-white rounded-[30px] shadow-2xl w-full max-w-6xl mx-auto p-5 sm:p-8 md:p-10 flex flex-col md:flex-row gap-6 md:gap-8 items-center">
+          {/* Left Text Section */}
+          <Parallax
+            speed={-10}
+            className="w-full md:w-1/2 text-center md:text-left"
+          >
+            <p className="text-gray-700 text-sm sm:text-base mb-4">
+              As a trusted partner in student safety, we provide reliable,
+              real-time school bus tracking to keep parents informed and
+              children secure.
+            </p>
+            <div className="text-black text-3xl sm:text-4xl md:text-5xl font-extrabold leading-tight tracking-tight space-y-2">
+              {headlineWords.map((word, i) => (
+                <motion.div
+                  key={i}
+                  custom={i}
+                  initial="hidden"
+                  animate="visible"
+                  variants={wordVariants}
+                >
+                  {word}
+                </motion.div>
+              ))}
             </div>
+          </Parallax>
+
+          {/* Right Map Mini + Bus */}
+          <div className="w-full md:w-1/2 relative flex justify-center md:justify-end">
+            <div className="rounded-[30px] w-full max-w-[400px] h-[260px] sm:h-[320px] md:h-[400px] shadow-md overflow-hidden">
+              <MapContainer
+                center={center}
+                zoom={zoom + 1}
+                style={{ width: "100%", height: "100%" }}
+                zoomControl={false}
+                attributionControl={false}
+              >
+                <TileLayer
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  opacity={0.95}
+                />
+              </MapContainer>
+            </div>
+
+            {/* Bus Image */}
+            <Parallax
+              speed={15}
+              className="absolute bottom-[-30px] md:bottom-[30px] right-0 sm:right-[-10px] z-[999]"
+            >
+              <img
+                src="/bushero.png"
+                alt="Bus"
+                className="w-[90%] sm:w-[110%] md:w-[130%] max-w-[1000px] md:max-w-[1400px] drop-shadow-xl pointer-events-none"
+                loading="lazy"
+              />
+            </Parallax>
           </div>
         </div>
       </div>
 
-      {/* Background Elements */}
-      <div className="absolute top-0 right-0 w-1/3 h-full bg-yellow-400/10 -skew-x-12 transform origin-top-right"></div>
-
-      {/* Move the animation to a global CSS file or use inline style */}
-      <style>{`
-        @keyframes pulse {
-          0% {
-            transform: scale(0.95);
-          }
-          70% {
-            transform: scale(1.1);
-            box-shadow: 0 0 0 10px rgba(255, 204, 0, 0);
-          }
-          100% {
-            transform: scale(0.95);
-            box-shadow: 0 0 0 0 rgba(255, 204, 0, 0);
-          }
-        }
-      `}</style>
+      {/* Add some space below */}
+      <div className="h-[100px]" />
     </section>
   );
 };
+
+HeroSection.propTypes = {
+  center: PropTypes.arrayOf(PropTypes.number),
+  zoom: PropTypes.number,
+};
+
+export default memo(HeroSection);

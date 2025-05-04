@@ -36,6 +36,12 @@ import StripePayment from "./Pages/components/StripePayment";
 import RegistrationSuccess from "./Pages/components/RegistrationSuccess";
 import { FinanceManagement } from "./Pages/Admin/FinanceManagement";
 import BusLocation from "./Pages/Student/BusLocation";
+import DriverAttendance from "./Pages/Admin/DriverAttendance";
+import NotificationManagement from "./Pages/Driver/NotficationManagement";
+import AdminNotification from "./Pages/Admin/AdminNotification";
+import AdminSendNotification from "./Pages/Admin/Notifications/AdminSendNotification";
+import Notifications from "./Pages/Student/Notifications";
+import AllBusLocations from "./Pages/Admin/AllBusLocations";
 
 const PublicLayout = () => {
   return (
@@ -87,9 +93,23 @@ export default function App() {
 
             {/* Driver management */}
             <Route path="drivers" element={<DriverManagement />} />
+            <Route path="drivers" element={<DriverManagement />} />
 
             {/* Finance mgt */}
             <Route path="finance" element={<FinanceManagement />} />
+
+            {/* Driver profile mgt */}
+            <Route path="driver-shifts" element={<DriverAttendance />} />
+
+            {/* notifications mgt */}
+            <Route path="notifications" element={<AdminNotification />} />
+            <Route
+              path="notifications/sendNotification"
+              element={<AdminSendNotification />}
+            />
+
+            {/* {location} */}
+            <Route path="location" element={<AllBusLocations />} />
           </Route>
         </Route>
 
@@ -107,6 +127,7 @@ export default function App() {
             <Route path="vehicle" element={<VehicleInfo />} /> */}
             <Route path="sharelocation" element={<ShareLocation />} />
             <Route path="location" element={<StudentLocationTracking />} />
+            <Route path="notifications" element={<NotificationManagement />} />
           </Route>
         </Route>
 
@@ -115,6 +136,7 @@ export default function App() {
           <Route index element={<Navigate to="profile" />} />
           <Route path="profile" element={<StudentProfile />} />
           <Route path="buslocation" element={<BusLocation />} />
+          <Route path="notifications" element={<Notifications />} />
           {/* <Route path="attendance" element={<AttendanceSection />} />
           <Route path="location" element={<LocationTracking />} />
           <Route path="notifications" element={<NotificationsSection />} />
