@@ -11,6 +11,7 @@ import {
   MenuIcon,
   XIcon,
   ShareIcon,
+  Clock10Icon,
   QrCodeIcon,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
@@ -62,6 +63,12 @@ export const Sidebar = ({ mobileMenuOpen, setMobileMenuOpen }) => {
       label: "Vehicle Info",
       icon: <TruckIcon size={20} />,
       path: "vehicle",
+    },
+    {
+      id: "shift",
+      label: "Driver Shift",
+      icon: <Clock10Icon size={20} />,
+      path: "driver/shift",
     },
     {
       id: "QR",
