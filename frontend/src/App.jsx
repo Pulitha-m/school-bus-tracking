@@ -47,6 +47,7 @@ import MarkAttendance from "./Pages/Student/MarkAttendance";
 import AddAttendance from "./Pages/Student/AddAttendance";
 import  { ExpectedStudentsSidebar } from "./Pages/Driver/ExpectedStudentsSidebar";
 import ExpectedStdMgt from "./Pages/Admin/ExpectedStdMgt";
+import StudentPayment from "./Pages/Student/StudentPayment";
 
 const PublicLayout = () => {
   return (
@@ -159,6 +160,10 @@ export default function App() {
 
 
 
+          <Route path="notifications" element={<NotificationsSection />} />*/}
+          <Route path="payments" element={<StudentPayment />} />
+          {/*<Route path="feedback" element={<FeedbackSection />} />
+          <Route path="notes" element={<DriverNotes />} /> */}
         </Route>
       </Routes>
     </BrowserRouter>
