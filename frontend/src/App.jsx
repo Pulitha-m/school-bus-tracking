@@ -19,18 +19,22 @@ import VehicleManagement from "./Pages/Admin/VehicleManagement";
 import Dashboard from "./Pages/Admin/Dashboard";
 import EditBus from "./Pages/Admin/Vehicle/EditBus";
 import ViewBus from "./Pages/Admin/Vehicle/ViewBus";
+import AttendanceManagement from "./Pages/Admin/AttendanceManagement";
 import RouteManagement from "./Pages/Admin/RouteManagement";
 import AddRoute from "./Pages/Admin/Route/AddRoute";
 import EditRoute from "./Pages/Admin/Route/EditRoute";
 import CareerManagement from "./Pages/Admin/CareerManagement";
 import DriverManagement from "./Pages/Admin/DriverManagement";
+import StudentManagement from "./Pages/Admin/StudentManagement";
 import DriverDashboard from "./Pages/Driver/DriverDashboard";
 import DriverLayout from "./Pages/Driver/components/DriverLayout";
 import DriverProfile from "./Pages/Driver/DriverProfile";
 import ShareLocation from "./Pages/Driver/ShareLocation";
+import QRScanner from "./Pages/Driver/QRScanner";
 import StudentLocationTracking from "./Pages/Driver/StudentLocationTracking";
 import { StudentLayout } from "./Pages/Student/components/StudentLayout";
 import { StudentProfile } from "./Pages/Student/StudentProfile";
+import StudentAttendance from "./Pages/Student/StudentAttendance";
 
 
 import StripePayment from "./Pages/components/StripePayment";
@@ -81,6 +85,9 @@ export default function App() {
         <Route element={<AdminLayout />}>
           <Route path="/admin" element={<AdminDashboard />}>
             <Route path="dashboard" element={<Dashboard />} />
+            <Route path="attendance" element={<AttendanceManagement />} />
+            <Route path="students" element={<StudentManagement />} />
+
             {/* Vehicle management */}
             <Route path="vehicles" element={<VehicleManagement />} />
             <Route path="vehicles/addVehicle" element={<AddBus />} />
@@ -134,6 +141,7 @@ export default function App() {
             <Route path="vehicle" element={<VehicleInfo />} /> */}
             <Route path="sharelocation" element={<ShareLocation />} />
             <Route path="location" element={<StudentLocationTracking />} />
+            <Route path="qrcode" element={<QRScanner />} />
             <Route path="notifications" element={<NotificationManagement />} />
             <Route path="exstudent" element={<ExpectedStudentsSidebar/>} />
           </Route>
@@ -143,6 +151,7 @@ export default function App() {
         <Route path="/student" element={<StudentLayout />}>
           <Route index element={<Navigate to="profile" />} />
           <Route path="profile" element={<StudentProfile />} />
+          <Route path="attendance" element={<StudentAttendance />} />
           <Route path="buslocation" element={<BusLocation />} />
           <Route path="notifications" element={<Notifications />} />
           {/* <Route path="attendance" element={<AttendanceSection />} />
@@ -160,7 +169,7 @@ export default function App() {
 
 
 
-          <Route path="notifications" element={<NotificationsSection />} />*/}
+
           <Route path="payments" element={<StudentPayment />} />
           {/*<Route path="feedback" element={<FeedbackSection />} />
           <Route path="notes" element={<DriverNotes />} /> */}
