@@ -90,6 +90,18 @@
 			<version>3.5.1</version>
 		</dependency>
 
+		<!-- Validation API -->
+		<dependency>
+			<groupId>org.hibernate.validator</groupId>
+			<artifactId>hibernate-validator</artifactId>
+		</dependency>
+
+		<!-- If using jakarta.validation (like you are) -->
+		<dependency>
+			<groupId>jakarta.validation</groupId>
+			<artifactId>jakarta.validation-api</artifactId>
+		</dependency>
+
 
 
 		<dependency>

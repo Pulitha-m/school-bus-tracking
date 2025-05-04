@@ -62,6 +62,12 @@ export const Sidebar = ({ mobileMenuOpen, setMobileMenuOpen }) => {
       icon: <TruckIcon size={20} />,
       path: "vehicle",
     },
+    {
+      id: "exstudent",
+      label: "Expected Students",
+      icon: <UsersIcon size={20} />,
+      path: "driver/exstudent",
+    },
   ];
 
   const handleLogout = () => {

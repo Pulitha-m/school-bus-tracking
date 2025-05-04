@@ -56,10 +56,10 @@ const Sidebar = ({ mobileMenuOpen, setMobileMenuOpen }) => {
       path: "feedback",
     },
     {
-      id: "notes",
-      label: "Driver Notes",
+      id: "MarkAttendance",
+      label: "MarkAttendance",
       icon: <FileTextIcon size={20} />,
-      path: "notes",
+      path: "MarkAttendance",
     },
   ];
 
