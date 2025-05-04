@@ -34,7 +34,15 @@ const MarkAttendance = () => {
       const { username } = JSON.parse(sessionData);
 
       const response = await axios.get(`${backendUrl}/api/availability/student/${username}`);
-      setAttendanceRecords(response.data);
+      // Filter records for last 7 days and sort by date descending
+      const oneWeekAgo = new Date();
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+      
+      const filteredRecords = response.data
+        .filter(record => new Date(record.date) >= oneWeekAgo)
+        .sort((a, b) => new Date(b.date) - new Date(a.date));
+      
+      setAttendanceRecords(filteredRecords);
       setLoading(false);
     } catch (err) {
       setError("Failed to load attendance records");
@@ -69,6 +77,18 @@ const MarkAttendance = () => {
 
   const handleSubmitEdit = async (updatedData) => {
     try {
+      // Check if another record exists for the same date
+      const existingRecord = attendanceRecords.find(
+        record => 
+          new Date(record.date).toDateString() === new Date(updatedData.date).toDateString() &&
+          record.id !== editingRecord.id
+      );
+
+      if (existingRecord) {
+        toast.error("An attendance record already exists for this date");
+        return;
+      }
+
       await axios.put(`${backendUrl}/api/availability/${editingRecord.id}`, updatedData);
       toast.success("Attendance updated successfully!");
       loadAttendanceRecords();
@@ -81,28 +101,22 @@ const MarkAttendance = () => {
   // Prepare data for the bar chart
   const daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const attendanceByDay = daysOfWeek.map((_, index) => {
-    // Find records for each day of the week
     const dayRecords = attendanceRecords.filter((record) => {
       const date = new Date(record.date);
-      // JavaScript getDay() returns 0 for Sunday, 1 for Monday, etc.
-      // We adjust to match our array (Mon = 0, Sun = 6)
-      const dayOfWeek = (date.getDay() + 6) % 7; // Adjust so Mon = 0, Sun = 6
+      const dayOfWeek = (date.getDay() + 6) % 7;
       return dayOfWeek === index;
     });
 
-    // If no records for the day, return -1 (No Data)
     if (dayRecords.length === 0) return -1;
 
-    // Take the latest record for the day (or adjust logic as needed)
     const latestRecord = dayRecords.sort((a, b) => new Date(b.date) - new Date(a.date))[0];
-    return latestRecord.coming ? 1 : 0; // 1 for Coming, 0 for Not Coming
+    return latestRecord.coming ? 1 : 0;
   });
 
-  // Determine background colors based on attendance status
   const backgroundColors = attendanceByDay.map((status) => {
-    if (status === 1) return "#34D399"; // Green for Coming
-    if (status === 0) return "#F87171"; // Red for Not Coming
-    return "#D1D5DB"; // Gray for No Data
+    if (status === 1) return "#34D399";
+    if (status === 0) return "#F87171";
+    return "#D1D5DB";
   });
 
   const chartData = {
@@ -135,7 +149,7 @@ const MarkAttendance = () => {
     },
     plugins: {
       legend: {
-        display: false, // Hide the legend since we use colors to indicate status
+        display: false,
       },
       tooltip: {
         callbacks: {
@@ -148,7 +162,13 @@ const MarkAttendance = () => {
         },
       },
     },
-    maintainAspectRatio: false, // Allow the chart to adjust its aspect ratio
+    maintainAspectRatio: false,
+  };
+
+  const isToday = (date) => {
+    const today = new Date();
+    const recordDate = new Date(date);
+    return today.toDateString() === recordDate.toDateString();
   };
 
   return (
@@ -171,7 +191,6 @@ const MarkAttendance = () => {
         <div className="p-8 text-center text-red-500">{error}</div>
       ) : (
         <>
-          {/* Table Section */}
           <div className="bg-white p-8 rounded-xl shadow-lg mb-6">
             {attendanceRecords.length === 0 ? (
               <p className="text-gray-600">No records found</p>
@@ -188,7 +207,10 @@ const MarkAttendance = () => {
                   </thead>
                   <tbody>
                     {attendanceRecords.map((record) => (
-                      <tr key={record.id} className="border-b hover:bg-gray-50">
+                      <tr 
+                        key={record.id} 
+                        className={`border-b hover:bg-gray-50 ${isToday(record.date) ? 'bg-yellow-100' : ''}`}
+                      >
                         <td className="py-3 px-4">{new Date(record.date).toLocaleDateString()}</td>
                         <td className="py-3 px-4">{record.coming ? "Coming" : "Not Coming"}</td>
                         <td className="py-3 px-4">{record.reason || "-"}</td>
@@ -214,7 +236,6 @@ const MarkAttendance = () => {
             )}
           </div>
 
-          {/* Bar Chart Section */}
           {attendanceRecords.length > 0 && (
             <div className="bg-white p-8 rounded-xl shadow-lg">
               <h3 className="text-xl font-bold text-yellow-500 mb-4">Expected Attendance Overview</h3>
@@ -243,7 +264,6 @@ const MarkAttendance = () => {
   );
 };
 
-// EditModal and DeleteModal components remain unchanged
 const EditModal = ({ isOpen, onClose, onSubmit, record }) => {
   const [formData, setFormData] = useState({
     email: "",
@@ -273,6 +293,14 @@ const EditModal = ({ isOpen, onClose, onSubmit, record }) => {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
+    if (name === "studentName") {
+      // Validate name: only letters and one space
+      if (!/^[A-Za-z]+ [A-Za-z]+$/.test(value) && value !== "") {
+        setErrors(prev => ({ ...prev, studentName: "Name must contain only letters with one space between first and last name" }));
+      } else {
+        setErrors(prev => ({ ...prev, studentName: undefined }));
+      }
+    }
     setFormData((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
@@ -281,7 +309,11 @@ const EditModal = ({ isOpen, onClose, onSubmit, record }) => {
 
   const validateForm = () => {
     const newErrors = {};
-    if (!formData.studentName.trim()) newErrors.studentName = "Student name is required";
+    if (!formData.studentName.trim()) {
+      newErrors.studentName = "Student name is required";
+    } else if (!/^[A-Za-z]+ [A-Za-z]+$/.test(formData.studentName)) {
+      newErrors.studentName = "Name must contain only letters with one space between first and last name";
+    }
     if (!formData.date) newErrors.date = "Date is required";
     if (formData.coming === false && !formData.attendanceType)
       newErrors.attendanceType = "Attendance type is required";
@@ -339,18 +371,11 @@ const EditModal = ({ isOpen, onClose, onSubmit, record }) => {
             />
           </div>
 
-          <div className="mb-4">
-            <label className="block text-gray-700 font-medium mb-1">Bus ID</label>
-            <input
-              type="text"
-              name="busId"
-              value={formData.busId}
-              onChange={handleChange}
-              placeholder="Bus ID"
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
-              disabled
-            />
-          </div>
+          <input
+            type="hidden"
+            name="busId"
+            value={formData.busId}
+          />
 
           <div className="mb-4">
             <label className="block text-gray-700 font-medium mb-1">Coming?</label>
