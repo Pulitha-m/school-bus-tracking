@@ -36,7 +36,6 @@ import { StudentLayout } from "./Pages/Student/components/StudentLayout";
 import { StudentProfile } from "./Pages/Student/StudentProfile";
 import StudentAttendance from "./Pages/Student/StudentAttendance";
 
-
 import StripePayment from "./Pages/components/StripePayment";
 import RegistrationSuccess from "./Pages/components/RegistrationSuccess";
 import { FinanceManagement } from "./Pages/Admin/FinanceManagement";
@@ -49,7 +48,7 @@ import Notifications from "./Pages/Student/Notifications";
 import AllBusLocations from "./Pages/Admin/AllBusLocations";
 import MarkAttendance from "./Pages/Student/MarkAttendance";
 import AddAttendance from "./Pages/Student/AddAttendance";
-import  { ExpectedStudentsSidebar } from "./Pages/Driver/ExpectedStudentsSidebar";
+import { ExpectedStudentsSidebar } from "./Pages/Driver/ExpectedStudentsSidebar";
 import ExpectedStdMgt from "./Pages/Admin/ExpectedStdMgt";
 import StudentPayment from "./Pages/Student/StudentPayment";
 
@@ -143,7 +142,7 @@ export default function App() {
             <Route path="location" element={<StudentLocationTracking />} />
             <Route path="qrcode" element={<QRScanner />} />
             <Route path="notifications" element={<NotificationManagement />} />
-            <Route path="exstudent" element={<ExpectedStudentsSidebar/>} />
+            <Route path="exstudent" element={<ExpectedStudentsSidebar />} />
           </Route>
         </Route>
 
@@ -154,15 +153,15 @@ export default function App() {
           <Route path="attendance" element={<StudentAttendance />} />
           <Route path="buslocation" element={<BusLocation />} />
           <Route path="notifications" element={<Notifications />} />
-          {/* <Route path="attendance" element={<AttendanceSection />} />
+          {
+            /* <Route path="attendance" element={<AttendanceSection />} />
           <Route path="location" element={<LocationTracking />} />
           <Route path="notifications" element={<NotificationsSection />} />
           <Route path="payments" element={<PaymentSection />} />
           <Route path="feedback" element={<FeedbackSection />} />
           <Route path="notes" element={<DriverNotes />} /> */
 
-
-          <Route path="MarkAttendance" element={<MarkAttendance />} />
+            <Route path="MarkAttendance" element={<MarkAttendance />} />
           }
 
             <Route path="add-attendance" element={<AddAttendance />} />
