@@ -10,6 +10,7 @@ import com.stripe.model.checkout.Session;
 import com.stripe.net.ApiResource;
 import com.stripe.net.Webhook;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -322,5 +323,31 @@ public class PaymentController {
     }
 
 
+    @GetMapping("/payment-details")
+    public ResponseEntity<Map<String, Object>> getStudentPaymentDetails(@RequestParam String username) {
+        try {
+            Optional<Student> optionalStudent = studentRepo.findByUserUsername(username);
+            if (optionalStudent.isEmpty()) {
+                return ResponseEntity.badRequest().body(
+                        Collections.singletonMap("error", "Student not found for username: " + username));
+            }
 
+            List<Payment> payments = paymentRepo.findByStudentEmailOrderByPaymentDateDesc(username);
+            if (payments.isEmpty()) {
+                return ResponseEntity.ok(
+                        Collections.singletonMap("message", "No payment records found for this student"));
+            }
+
+            Payment latestPayment = payments.get(0);
+            Map<String, Object> response = new HashMap<>();
+            response.put("amount", latestPayment.getAmount());
+            response.put("nextDueDate", latestPayment.getNextDueDate());
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            System.out.println("Error fetching payment details: " + e.getMessage());
+            return ResponseEntity.status(500).body(
+                    Collections.singletonMap("error", "Error fetching payment details: " + e.getMessage()));
+        }
+    }
 }
