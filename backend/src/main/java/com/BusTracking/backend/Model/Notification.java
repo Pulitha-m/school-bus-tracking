@@ -4,18 +4,18 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-
 import java.util.Date;
 
 @Entity
 public class Notification {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String busId;
-    private String routeId;
     private String driverUsername;
+    private String title; // ✅ New field
     private String level; // INFO, WARNING, CRITICAL
     private String message;
     private Date timestamp;
@@ -38,20 +38,20 @@ public class Notification {
         this.busId = busId;
     }
 
-    public String getRouteId() {
-        return routeId;
-    }
-
-    public void setRouteId(String routeId) {
-        this.routeId = routeId;
-    }
-
     public String getDriverUsername() {
         return driverUsername;
     }
 
     public void setDriverUsername(String driverUsername) {
         this.driverUsername = driverUsername;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
     }
 
     public String getLevel() {
@@ -77,5 +77,4 @@ public class Notification {
     public void setTimestamp(Date timestamp) {
         this.timestamp = timestamp;
     }
-    // Constructor
 }
