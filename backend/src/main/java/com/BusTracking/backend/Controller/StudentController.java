@@ -112,19 +112,7 @@ public class StudentController {
         return ResponseEntity.ok(userRepo.findByUsername(email));
 
     }
-    @GetMapping("/getStudentByEmail/{email}")
-    public ResponseEntity<Student> getStudentByEmail(@PathVariable String email) {
-        try {
-            // If student exists, return the student data
-            Student student = studentService.getStudentByUserUsername(email)
-                    .orElseThrow(() -> new RuntimeException("Student not found"));
 
-            return ResponseEntity.ok(student);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build(); // Return 404 if student not found
-        }
     }
 
 
-
-}
