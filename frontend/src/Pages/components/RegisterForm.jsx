@@ -449,6 +449,12 @@ const MultiStepRegisterForm = () => {
               value={formData.fullName}
               onChange={handleChange}
               required
+              onKeyDown={(e) => {
+                // Prevent "@" symbol and any number (0-9) from being typed
+                if (e.key === "@" || /\d/.test(e.key)) {
+                  e.preventDefault(); // Prevent the character from being typed
+                }
+              }}
             />
             <InputField
               label="Email"
