@@ -79,7 +79,7 @@ public class StudentService {
 
         // === QR Code Generation ===
         try {
-            String qrData = savedUser.getId().toString(); // or "STUDENT_" + id
+            String qrData = savedUser.getUsername(); // or "STUDENT_" + id
             QRCodeWriter qrCodeWriter = new QRCodeWriter();
             BitMatrix bitMatrix = qrCodeWriter.encode(qrData, BarcodeFormat.QR_CODE, 200, 200);
 

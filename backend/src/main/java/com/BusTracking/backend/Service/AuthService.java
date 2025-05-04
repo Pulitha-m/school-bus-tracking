@@ -7,6 +7,8 @@ import com.BusTracking.backend.Model.User;
 import com.BusTracking.backend.Repository.PaymentRepo;
 import com.BusTracking.backend.Repository.UserRepo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -110,4 +112,18 @@ public class AuthService {
         session.invalidate();
         return "User logged out successfully";
 }
+
+//    public ResponseEntity<?> resetPasswordWithoutToken(String username, String newPassword) {
+//        Optional<User> optionalUser = userRepo.findByEmail(username);
+//        if (optionalUser.isEmpty()) {
+//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+//        }
+//
+//        User user = optionalUser.get();
+//        user.setPassword(passwordEncoder.encode(newPassword));
+//        userRepo.save(user);
+//
+//        return ResponseEntity.ok("Password has been reset successfully");
+//    }
+
 }

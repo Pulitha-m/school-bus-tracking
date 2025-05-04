@@ -3,18 +3,24 @@ package com.BusTracking.backend.Controller;
 
 import com.BusTracking.backend.Enums.ROLE;
 import com.BusTracking.backend.Model.Student;
+import com.BusTracking.backend.Model.User;
+import com.BusTracking.backend.Repository.UserRepo;
 import com.BusTracking.backend.Service.StudentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 public class StudentController {
 
     @Autowired
     private StudentService studentService;
+
+    @Autowired
+    private UserRepo userRepo;
 
     // Create a new student - NO CHANGES
     @PostMapping("/registerStudent")
@@ -100,6 +106,25 @@ public class StudentController {
     public ResponseEntity<List<Student>> getStudentsByBusId(@PathVariable Long busId) {
         return ResponseEntity.ok(studentService.getStudentsByBusId(busId));
 }
+
+    @GetMapping("/api/getStudentByEmail/{email}")
+    public ResponseEntity<Optional<User>> getStudentsByBusId(@PathVariable String email) {
+        return ResponseEntity.ok(userRepo.findByUsername(email));
+
+    }
+    @GetMapping("/getStudentByEmail/{email}")
+    public ResponseEntity<Student> getStudentByEmail(@PathVariable String email) {
+        try {
+            // If student exists, return the student data
+            Student student = studentService.getStudentByUserUsername(email)
+                    .orElseThrow(() -> new RuntimeException("Student not found"));
+
+            return ResponseEntity.ok(student);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build(); // Return 404 if student not found
+        }
+    }
+
 
 
 }
