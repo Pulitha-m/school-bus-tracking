@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useNavigate } from "react-router-dom";
 import backendUrl from "../../config/config";
 
 const AddAttendance = () => {
@@ -10,7 +11,7 @@ const AddAttendance = () => {
     studentName: "",
     busId: "",
     busRoute: "",
-    noPlate: "", // Added
+    noPlate: "",
     coming: true,
     reason: "",
     date: "",
@@ -20,6 +21,7 @@ const AddAttendance = () => {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchStudentData = async () => {
@@ -27,7 +29,7 @@ const AddAttendance = () => {
         const sessionData = sessionStorage.getItem("user");
         if (!sessionData) throw new Error("No session data found");
 
-        const { id } = JSON.parse(sessionData);
+        const { id, username } = JSON.parse(sessionData);
 
         const response = await axios.get(`${backendUrl}/getStudentById/${id}`, {
           withCredentials: true,
@@ -53,6 +55,10 @@ const AddAttendance = () => {
             noPlate: busData.noPlate || "Unknown",
           }));
         }
+
+        const attendanceResponse = await axios.get(`${backendUrl}/api/availability/student/${username}`);
+        const existingRecords = attendanceResponse.data;
+        setFormData((prev) => ({ ...prev, existingRecords }));
       } catch (err) {
         toast.error("Failed to load student or bus data");
       } finally {
@@ -64,19 +70,67 @@ const AddAttendance = () => {
   }, []);
 
   const handleChange = (e) => {
-    setFormData((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
+    const { name, value, type, checked } = e.target;
+    if (name === "studentName") {
+      if (!/^[A-Za-z]+ [A-Za-z]+$/.test(value) && value !== "") {
+        setErrors(prev => ({ ...prev, studentName: "Name must contain only letters with one space between first and last name" }));
+      } else {
+        setErrors(prev => ({ ...prev, studentName: undefined }));
+      }
+    }
+    if (name === "coming") {
+      setFormData((prev) => ({
+        ...prev,
+        coming: value === "true",
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: type === "checkbox" ? checked : value,
+      }));
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    const charCode = e.charCode || e.which;
+    const char = String.fromCharCode(charCode);
+    const currentValue = e.target.value;
+
+    if (!/[A-Za-z]/.test(char) && char !== " ") {
+      e.preventDefault();
+      return;
+    }
+
+    if (char === " ") {
+      const parts = currentValue.split(" ");
+      if (parts.length > 1 || currentValue === "" || currentValue.endsWith(" ")) {
+        e.preventDefault();
+        return;
+      }
+    }
   };
 
   const validateForm = () => {
     const newErrors = {};
-    if (!formData.studentName.trim()) newErrors.studentName = "Student name is required";
+    if (!formData.studentName.trim()) {
+      newErrors.studentName = "Student name is required";
+    } else if (!/^[A-Za-z]+ [A-Za-z]+$/.test(formData.studentName)) {
+      newErrors.studentName = "Name must contain only letters with one space between first and last name";
+    }
     if (formData.coming === null) newErrors.coming = "Please select Coming status";
     if (!formData.date) newErrors.date = "Date is required";
     if (formData.coming === false && !formData.attendanceType)
       newErrors.attendanceType = "Attendance type is required";
+
+    if (formData.existingRecords) {
+      const existingRecord = formData.existingRecords.find(
+        record => new Date(record.date).toDateString() === new Date(formData.date).toDateString()
+      );
+      if (existingRecord) {
+        newErrors.date = "Attendance for this date already exists. Please edit the existing record.";
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -90,6 +144,7 @@ const AddAttendance = () => {
     try {
       await axios.post(`${backendUrl}/api/availability`, formData);
       toast.success("Attendance submitted successfully!");
+      navigate("/student/MarkAttendance"); // Changed to root route
     } catch (err) {
       toast.error("Failed to submit attendance");
     } finally {
@@ -109,7 +164,6 @@ const AddAttendance = () => {
     <div className="max-w-4xl mx-auto p-6">
       <h2 className="text-2xl font-bold text-yellow-500 mb-6">Add Attendance</h2>
       <form onSubmit={handleSubmit} className="bg-white p-8 rounded-xl shadow-lg">
-        {/* Student Name */}
         <div className="mb-4">
           <label className="block text-gray-700 font-medium mb-1">Student Full Name</label>
           <input
@@ -117,6 +171,7 @@ const AddAttendance = () => {
             name="studentName"
             value={formData.studentName}
             onChange={handleChange}
+            onKeyPress={handleKeyPress}
             placeholder="Enter student full name"
             className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 ${
               errors.studentName ? "border-red-500" : "border-gray-300"
@@ -126,7 +181,6 @@ const AddAttendance = () => {
           {errors.studentName && <p className="text-red-500 text-sm mt-1">{errors.studentName}</p>}
         </div>
 
-        {/* Email */}
         <div className="mb-4">
           <label className="block text-gray-700 font-medium mb-1">Email</label>
           <input
@@ -140,19 +194,17 @@ const AddAttendance = () => {
           />
         </div>
 
-        {/* Number Plate */}
-        <div className="mb-4">
-          <label className="block text-gray-700 font-medium mb-1">Number Plate</label>
-          <input
-            name="noPlate"
-            value={formData.noPlate}
-            placeholder="Bus Number Plate"
-            className="w-full p-3 border rounded-lg bg-gray-100 text-gray-700"
-            disabled
-          />
-        </div>
+        <input
+          type="hidden"
+          name="busId"
+          value={formData.busId}
+        />
+        <input
+          type="hidden"
+          name="noPlate"
+          value={formData.noPlate}
+        />
 
-        {/* Coming? */}
         <div className="mb-4">
           <label className="block text-gray-700 font-medium mb-1">Coming?</label>
           <div className="flex items-center space-x-4">
@@ -180,7 +232,6 @@ const AddAttendance = () => {
           {errors.coming && <p className="text-red-500 text-sm mt-1">{errors.coming}</p>}
         </div>
 
-        {/* Reason + Attendance Type if not coming */}
         {formData.coming === false && (
           <>
             <div className="mb-4">
@@ -215,7 +266,6 @@ const AddAttendance = () => {
           </>
         )}
 
-        {/* Date Picker */}
         <div className="mb-4">
           <label className="block text-gray-700 font-medium mb-1">Date</label>
           <input
@@ -233,7 +283,6 @@ const AddAttendance = () => {
           {errors.date && <p className="text-red-500 text-sm mt-1">{errors.date}</p>}
         </div>
 
-        {/* Submit Button */}
         <button
           type="submit"
           className="w-full py-3 bg-yellow-500 text-white font-semibold rounded-lg hover:bg-yellow-600 transition"
