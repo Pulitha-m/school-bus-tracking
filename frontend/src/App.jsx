@@ -129,7 +129,6 @@ export default function App() {
             {/* {location} */}
             <Route path="location" element={<AllBusLocations />} />
             <Route path="driver-shift" element={<ShiftManagement />} />
-
           </Route>
         </Route>
 
@@ -176,10 +175,7 @@ export default function App() {
             <Route path="MarkAttendance" element={<MarkAttendance />} />
           }
 
-            <Route path="add-attendance" element={<AddAttendance />} />
-
-
-
+          <Route path="add-attendance" element={<AddAttendance />} />
 
           <Route path="payments" element={<StudentPayment />} />
           {/*<Route path="feedback" element={<FeedbackSection />} />

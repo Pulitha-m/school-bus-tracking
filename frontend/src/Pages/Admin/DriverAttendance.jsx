@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   UsersIcon,
   SearchIcon,
@@ -62,9 +62,9 @@ const ShiftManagement = () => {
 
   // Format ISO time string to HH:mm:ss
   const formatTime = (timeStr) => {
-    if (!timeStr) return '-';
+    if (!timeStr) return "-";
     const date = new Date(`1970-01-01T${timeStr}Z`);
-    return date.toLocaleTimeString('en-GB', { hour12: false });
+    return date.toLocaleTimeString("en-GB", { hour12: false });
   };
 
   // Convert ISO 8601 duration to readable format (HH:mm:ss)
@@ -156,7 +156,7 @@ return new Date(totalSeconds * 1000).toISOString().substr(11, 8);
     // Report title and metadata
     doc.setFontSize(18);
     doc.setTextColor(40);
-    doc.text('Driver Shift Report', 105, 15, { align: 'center' });
+    doc.text("Driver Shift Report", 105, 15, { align: "center" });
 
     doc.setFontSize(12);
     doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 105, 22, { align: 'center' });
@@ -191,7 +191,9 @@ return new Date(totalSeconds * 1000).toISOString().substr(11, 8);
 
     // Add the table using autoTable
     autoTable(doc, {
-      head: [['Driver ID', 'Date', 'Shift Start', 'Shift End', 'Duration', 'Status']],
+      head: [
+        ["Driver ID", "Date", "Shift Start", "Shift End", "Duration", "Status"],
+      ],
       body: tableData,
       startY: 86,
       theme: 'grid',
@@ -215,7 +217,12 @@ return new Date(totalSeconds * 1000).toISOString().substr(11, 8);
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i);
       doc.setFontSize(10);
-      doc.text(`Page ${i} of ${pageCount}`, 105, doc.internal.pageSize.height - 10, { align: 'center' });
+      doc.text(
+        `Page ${i} of ${pageCount}`,
+        105,
+        doc.internal.pageSize.height - 10,
+        { align: "center" }
+      );
     }
 
     doc.save(`driver-shift-report-${currentDate.toISOString().slice(0, 10)}.pdf`);
