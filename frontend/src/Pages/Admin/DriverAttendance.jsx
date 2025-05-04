@@ -153,3 +153,5 @@ export const ShiftManagement = () => {
 
     doc.save(`driver-shift-report-${new Date().toISOString().slice(0, 10)}.pdf`);
   };
+};
+export default ShiftManagement;
