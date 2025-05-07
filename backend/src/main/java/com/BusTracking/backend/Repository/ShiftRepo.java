@@ -8,6 +8,7 @@ import java.util.*;
 
 public interface ShiftRepo extends JpaRepository<Shift, Long> {
     Optional<Shift> findByDriverIdAndDate(Long driverId, LocalDate date);
+    List<Shift> findByDateBetweenOrderByDriverIdAsc(LocalDate startDate, LocalDate endDate);
     List<Shift> findByDriverId(Long driverId);
 }
 
