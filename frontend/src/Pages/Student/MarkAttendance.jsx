@@ -7,6 +7,9 @@ import backendUrl from "../../config/config";
 import { EditIcon, DeleteIcon, PlusIcon } from "lucide-react";
 import { Bar } from "react-chartjs-2";
 import { Chart as ChartJS, BarElement, CategoryScale, LinearScale, Tooltip, Legend } from "chart.js";
+import Calendar from "react-calendar";
+import "react-calendar/dist/Calendar.css";
+
 
 // Register Chart.js components for bar chart
 ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend);
@@ -98,6 +101,37 @@ const MarkAttendance = () => {
     }
   };
 
+  <div className="bg-white p-8 rounded-xl shadow-lg mt-6">
+  <h3 className="text-xl font-bold text-yellow-500 mb-4">Attendance Calendar</h3>
+  <Calendar
+    tileContent={({ date, view }) => {
+      if (view === "month") {
+        const match = attendanceRecords.find(
+          (record) => new Date(record.date).toDateString() === date.toDateString()
+        );
+
+        if (match) {
+          return (
+            <div className="text-xs text-center mt-1">
+              <span
+                className={`inline-block w-2 h-2 rounded-full ${
+                  match.coming ? "bg-green-400" : "bg-red-400"
+                }`}
+              ></span>
+            </div>
+          );
+        } else {
+          return (
+            <div className="text-xs text-center mt-1">
+              <span className="inline-block w-2 h-2 rounded-full bg-gray-300"></span>
+            </div>
+          );
+        }
+      }
+    }}
+  />
+</div>
+
   // Prepare data for the bar chart
   const daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const attendanceByDay = daysOfWeek.map((_, index) => {
@@ -119,51 +153,83 @@ const MarkAttendance = () => {
     return "#D1D5DB";
   });
 
-  const chartData = {
-    labels: daysOfWeek,
-    datasets: [
-      {
-        label: "Attendance Status",
-        data: attendanceByDay,
-        backgroundColor: backgroundColors,
-        borderColor: backgroundColors,
-        borderWidth: 1,
-      },
-    ],
-  };
+  const comingCounts = Array(7).fill(0);
+const notComingCounts = Array(7).fill(0);
+const noDataCounts = Array(7).fill(1); // Assume 1 slot per day initially, subtract if data exists
 
-  const chartOptions = {
-    scales: {
-      y: {
-        beginAtZero: true,
-        max: 1,
-        ticks: {
-          stepSize: 1,
-          callback: (value) => {
-            if (value === 1) return "Coming";
-            if (value === 0) return "Not Coming";
-            return "";
-          },
+attendanceRecords.forEach((record) => {
+  const date = new Date(record.date);
+  const dayOfWeek = (date.getDay() + 6) % 7;
+
+  noDataCounts[dayOfWeek] = 0; // Data exists for this day
+
+  if (record.coming) {
+    comingCounts[dayOfWeek]++;
+  } else {
+    notComingCounts[dayOfWeek]++;
+  }
+});
+
+// Set 1 for no data where both counts are zero
+noDataCounts.forEach((_, i) => {
+  if (comingCounts[i] === 0 && notComingCounts[i] === 0) {
+    noDataCounts[i] = 1;
+  }
+});
+
+const chartData = {
+  labels: daysOfWeek,
+  datasets: [
+    {
+      label: "Coming",
+      data: comingCounts,
+      backgroundColor: "#34D399", // green
+    },
+    {
+      label: "Not Coming",
+      data: notComingCounts,
+      backgroundColor: "#F87171", // red
+    },
+    {
+      label: "No Data",
+      data: noDataCounts,
+      backgroundColor: "#D1D5DB", // gray
+    },
+  ],
+};
+
+
+const chartOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+  scales: {
+    x: {
+      stacked: true,
+    },
+    y: {
+      stacked: true,
+      beginAtZero: true,
+      ticks: {
+        stepSize: 1,
+      },
+    },
+  },
+  plugins: {
+    legend: {
+      display: true,
+      position: "bottom",
+    },
+    tooltip: {
+      callbacks: {
+        label: (context) => {
+          const value = context.raw;
+          return `${context.dataset.label}: ${value}`;
         },
       },
     },
-    plugins: {
-      legend: {
-        display: false,
-      },
-      tooltip: {
-        callbacks: {
-          label: (context) => {
-            const value = context.raw;
-            if (value === 1) return "Coming";
-            if (value === 0) return "Not Coming";
-            return "No Data";
-          },
-        },
-      },
-    },
-    maintainAspectRatio: false,
-  };
+  },
+};
+
 
   const isToday = (date) => {
     const today = new Date();
@@ -173,16 +239,21 @@ const MarkAttendance = () => {
 
   return (
     <div className="max-w-4xl mx-auto p-6">
-      <h2 className="text-2xl font-bold text-yellow-500 mb-6">Attendance History</h2>
-      <div className="mb-4">
-        <button
-          onClick={() => navigate("/student/add-attendance")}
-          className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition flex items-center"
-        >
-          <PlusIcon className="h-5 w-5 mr-2" />
-          Add Attendance
-        </button>
-      </div>
+      <h2 className="text-2xl font-bold text-yellow-500 mb-6">Expected Attendance History</h2>
+      <div className="bg-yellow-500 text-white flex justify-between items-center px-6 py-4 rounded-xl shadow-lg mb-6">
+  <div className="flex items-center space-x-3">
+    <span className="text-2xl">🚌</span>
+    <p className="font-bold text-lg">Don't miss the bus! Mark your attendance now</p>
+  </div>
+  <button
+    onClick={() => navigate("/student/add-attendance")}
+    className="flex items-center bg-white text-yellow-600 font-semibold px-4 py-2 rounded-md hover:bg-gray-100 transition"
+  >
+    <PlusIcon className="h-5 w-5 mr-2" />
+    Add Attendance
+  </button>
+</div>
+
       {loading ? (
         <div className="flex justify-center items-center h-screen">
           <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-yellow-500"></div>
@@ -237,13 +308,35 @@ const MarkAttendance = () => {
           </div>
 
           {attendanceRecords.length > 0 && (
-            <div className="bg-white p-8 rounded-xl shadow-lg">
-              <h3 className="text-xl font-bold text-yellow-500 mb-4">Expected Attendance Overview</h3>
-              <div className="w-full h-64">
-                <Bar data={chartData} options={chartOptions} />
-              </div>
+  <div className="bg-white p-8 rounded-xl shadow-lg">
+    <h3 className="text-xl font-bold text-yellow-500 mb-4">Expected Attendance Overview</h3>
+    <div className="w-full h-64">
+      <Bar data={chartData} options={chartOptions} />
+      <div className="mt-2 flex justify-between text-sm text-gray-500">
+        {daysOfWeek.map((day, index) => {
+          const dayRecords = attendanceRecords.filter((record) => {
+            const date = new Date(record.date);
+            const dayOfWeek = (date.getDay() + 6) % 7;
+            return dayOfWeek === index;
+          });
+
+          const latestDate = dayRecords.length > 0
+            ? new Date(
+                dayRecords.sort((a, b) => new Date(b.date) - new Date(a.date))[0].date
+              ).toLocaleDateString()
+            : "—";
+
+          return (
+            <div key={index} className="flex-1 text-center">
+              <div>{latestDate}</div>
             </div>
-          )}
+          );
+        })}
+      </div>
+    </div>
+  </div>
+)}
+
         </>
       )}
 
@@ -293,14 +386,25 @@ const EditModal = ({ isOpen, onClose, onSubmit, record }) => {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
+
     if (name === "studentName") {
-      // Validate name: only letters and one space
-      if (!/^[A-Za-z]+ [A-Za-z]+$/.test(value) && value !== "") {
-        setErrors(prev => ({ ...prev, studentName: "Name must contain only letters with one space between first and last name" }));
+      const allowed = /^[A-Za-z ]*$/;
+      if (!allowed.test(value)) return;
+
+      const trimmed = value.trim();
+      const namePattern = /^[A-Za-z]+ [A-Za-z]+$/;
+      if (trimmed === "") {
+        setErrors((prev) => ({ ...prev, studentName: "Student name is required" }));
+      } else if (!namePattern.test(trimmed)) {
+        setErrors((prev) => ({
+          ...prev,
+          studentName: "Name must have two words with only letters and one space (e.g., John Doe)",
+        }));
       } else {
-        setErrors(prev => ({ ...prev, studentName: undefined }));
+        setErrors((prev) => ({ ...prev, studentName: undefined }));
       }
     }
+
     setFormData((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
@@ -309,28 +413,47 @@ const EditModal = ({ isOpen, onClose, onSubmit, record }) => {
 
   const validateForm = () => {
     const newErrors = {};
-    if (!formData.studentName.trim()) {
+    const trimmedName = formData.studentName.trim();
+    const namePattern = /^[A-Za-z]+ [A-Za-z]+$/;
+  
+    if (!trimmedName) {
       newErrors.studentName = "Student name is required";
-    } else if (!/^[A-Za-z]+ [A-Za-z]+$/.test(formData.studentName)) {
-      newErrors.studentName = "Name must contain only letters with one space between first and last name";
+    } else if (!namePattern.test(trimmedName)) {
+      newErrors.studentName = "Name must have two words with only letters and one space (e.g., John Doe)";
     }
-    if (!formData.date) newErrors.date = "Date is required";
-    if (formData.coming === false && !formData.attendanceType)
+  
+    if (!formData.date) {
+      newErrors.date = "Date is required";
+    } else {
+      const selectedDate = new Date(formData.date);
+      const day = selectedDate.getDay(); // 0 = Sunday, 6 = Saturday
+      if (day === 0 || day === 6) {
+        newErrors.date = "Attendance cannot be marked for Saturdays or Sundays.";
+      }
+    }
+  
+    if (formData.coming === false && !formData.attendanceType) {
       newErrors.attendanceType = "Attendance type is required";
+    }
+  
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
+  
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!validateForm()) return;
+    if (!validateForm()) {
+      toast.error("Please fix the validation errors before submitting.");
+      return;
+    }
+
     onSubmit(formData);
   };
 
   const today = new Date();
   const maxDate = new Date();
   maxDate.setDate(today.getDate() + 7);
-
   const formatDate = (date) => date.toISOString().split("T")[0];
 
   return (
@@ -355,7 +478,9 @@ const EditModal = ({ isOpen, onClose, onSubmit, record }) => {
               }`}
               required
             />
-            {errors.studentName && <p className="text-red-500 text-sm mt-1">{errors.studentName}</p>}
+            {errors.studentName && (
+              <p className="text-red-500 text-sm mt-1">{errors.studentName}</p>
+            )}
           </div>
 
           <div className="mb-4">
@@ -365,17 +490,12 @@ const EditModal = ({ isOpen, onClose, onSubmit, record }) => {
               name="email"
               value={formData.email}
               onChange={handleChange}
-              placeholder="Student's email"
               className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
               disabled
             />
           </div>
 
-          <input
-            type="hidden"
-            name="busId"
-            value={formData.busId}
-          />
+          <input type="hidden" name="busId" value={formData.busId} />
 
           <div className="mb-4">
             <label className="block text-gray-700 font-medium mb-1">Coming?</label>
@@ -385,7 +505,7 @@ const EditModal = ({ isOpen, onClose, onSubmit, record }) => {
                   type="radio"
                   name="coming"
                   checked={formData.coming === true}
-                  onChange={() => setFormData((prev) => ({ ...prev, coming: true }))} 
+                  onChange={() => setFormData((prev) => ({ ...prev, coming: true }))}
                   className="mr-2"
                 />
                 Yes
@@ -395,13 +515,12 @@ const EditModal = ({ isOpen, onClose, onSubmit, record }) => {
                   type="radio"
                   name="coming"
                   checked={formData.coming === false}
-                  onChange={() => setFormData((prev) => ({ ...prev, coming: false }))} 
+                  onChange={() => setFormData((prev) => ({ ...prev, coming: false }))}
                   className="mr-2"
                 />
                 No
               </label>
             </div>
-            {errors.coming && <p className="text-red-500 text-sm mt-1">{errors.coming}</p>}
           </div>
 
           {formData.coming === false && (
@@ -452,16 +571,21 @@ const EditModal = ({ isOpen, onClose, onSubmit, record }) => {
               }`}
               required
             />
-            {errors.date && <p className="text-red-500 text-sm mt-1">{errors.date}</p>}
+            {errors.date && (
+              <p className="text-red-500 text-sm mt-1">{errors.date}</p>
+            )}
           </div>
 
-          <div className="flex space-x-4">
+          <div className="flex flex-col space-y-2">
             <button
               type="submit"
               className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition"
             >
               Save
             </button>
+          </div>
+
+          <div className="mt-4">
             <button
               type="button"
               onClick={onClose}
@@ -476,14 +600,19 @@ const EditModal = ({ isOpen, onClose, onSubmit, record }) => {
   );
 };
 
+
+
+
+
+
 const DeleteModal = ({ isOpen, onClose, onConfirm, isDeleting }) => {
   return (
     <div
-      className={`fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex justify-center items-center ${
+      className={`fixed inset-0 bg-white flex justify-center items-center ${
         isOpen ? "" : "hidden"
       }`}
     >
-      <div className="bg-white p-6 rounded-xl shadow-lg w-full max-w-sm">
+      <div className="bg-white p-6 rounded-xl shadow-lg w-full max-w-sm border border-gray-200">
         <h3 className="text-lg font-bold text-gray-700 mb-4">Confirm Deletion</h3>
         <p className="text-gray-600 mb-6">Are you sure you want to delete this attendance record?</p>
         <div className="flex space-x-4">
@@ -505,5 +634,6 @@ const DeleteModal = ({ isOpen, onClose, onConfirm, isDeleting }) => {
     </div>
   );
 };
+
 
 export default MarkAttendance;

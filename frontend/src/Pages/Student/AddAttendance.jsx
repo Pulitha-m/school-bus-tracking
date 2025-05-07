@@ -4,6 +4,7 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useNavigate } from "react-router-dom";
 import backendUrl from "../../config/config";
+import DatePicker from "react-multi-date-picker";
 
 const AddAttendance = () => {
   const [formData, setFormData] = useState({
@@ -14,8 +15,9 @@ const AddAttendance = () => {
     noPlate: "",
     coming: true,
     reason: "",
-    date: "",
+    dates: [],
     attendanceType: "Both",
+    existingRecords: [],
   });
 
   const [errors, setErrors] = useState({});
@@ -71,18 +73,25 @@ const AddAttendance = () => {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
+
     if (name === "studentName") {
-      if (!/^[A-Za-z]+ [A-Za-z]+$/.test(value) && value !== "") {
-        setErrors(prev => ({ ...prev, studentName: "Name must contain only letters with one space between first and last name" }));
+      const allowed = /^[A-Za-z ]*$/;
+      if (!allowed.test(value)) return;
+
+      setFormData((prev) => ({ ...prev, studentName: value }));
+
+      const trimmed = value.trim();
+      const namePattern = /^[A-Za-z]+ [A-Za-z]+$/;
+      if (trimmed === "") {
+        setErrors((prev) => ({ ...prev, studentName: "Student name is required" }));
+      } else if (!namePattern.test(trimmed)) {
+        setErrors((prev) => ({
+          ...prev,
+          studentName: "Name must have two words with only letters and one space (e.g., John Doe)",
+        }));
       } else {
-        setErrors(prev => ({ ...prev, studentName: undefined }));
+        setErrors((prev) => ({ ...prev, studentName: undefined }));
       }
-    }
-    if (name === "coming") {
-      setFormData((prev) => ({
-        ...prev,
-        coming: value === "true",
-      }));
     } else {
       setFormData((prev) => ({
         ...prev,
@@ -91,62 +100,79 @@ const AddAttendance = () => {
     }
   };
 
-  const handleKeyPress = (e) => {
-    const charCode = e.charCode || e.which;
-    const char = String.fromCharCode(charCode);
-    const currentValue = e.target.value;
-
-    if (!/[A-Za-z]/.test(char) && char !== " ") {
-      e.preventDefault();
-      return;
-    }
-
-    if (char === " ") {
-      const parts = currentValue.split(" ");
-      if (parts.length > 1 || currentValue === "" || currentValue.endsWith(" ")) {
-        e.preventDefault();
-        return;
-      }
-    }
-  };
-
   const validateForm = () => {
     const newErrors = {};
-    if (!formData.studentName.trim()) {
+    const trimmedName = formData.studentName.trim();
+    const namePattern = /^[A-Za-z]+ [A-Za-z]+$/;
+  
+    if (!trimmedName) {
       newErrors.studentName = "Student name is required";
-    } else if (!/^[A-Za-z]+ [A-Za-z]+$/.test(formData.studentName)) {
-      newErrors.studentName = "Name must contain only letters with one space between first and last name";
+    } else if (!namePattern.test(trimmedName)) {
+      newErrors.studentName = "Name must have two words with only letters and one space (e.g., John Doe)";
     }
+  
     if (formData.coming === null) newErrors.coming = "Please select Coming status";
-    if (!formData.date) newErrors.date = "Date is required";
-    if (formData.coming === false && !formData.attendanceType)
-      newErrors.attendanceType = "Attendance type is required";
-
-    if (formData.existingRecords) {
-      const existingRecord = formData.existingRecords.find(
-        record => new Date(record.date).toDateString() === new Date(formData.date).toDateString()
-      );
-      if (existingRecord) {
-        newErrors.date = "Attendance for this date already exists. Please edit the existing record.";
+  
+    if (!Array.isArray(formData.dates) || formData.dates.length === 0) {
+      newErrors.dates = "Please select at least one date";
+    } else {
+      const weekendDates = formData.dates.filter((date) => {
+        const day = date.toDate().getDay(); // 0 = Sunday, 6 = Saturday
+        return day === 0 || day === 6;
+      });
+  
+      if (weekendDates.length > 0) {
+        const formattedWeekends = weekendDates
+          .map((d) => d.toDate().toISOString().split("T")[0])
+          .join(", ");
+        newErrors.dates = `Weekends are not allowed: ${formattedWeekends}`;
       }
     }
-
+  
+    if (formData.coming === false && !formData.attendanceType)
+      newErrors.attendanceType = "Attendance type is required";
+  
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
+  
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
 
-    setIsSubmitting(true);
+    const duplicateDates = [];
 
+    // Check for duplicates only
+    for (let selectedDate of formData.dates) {
+      const formattedDate = selectedDate.toDate().toISOString().split("T")[0];
+      const recordExists = formData.existingRecords.some(
+        (record) => new Date(record.date).toDateString() === new Date(formattedDate).toDateString()
+      );
+      if (recordExists) duplicateDates.push(formattedDate);
+    }
+
+    if (duplicateDates.length > 0) {
+      toast.error(`❌ Attendance already exists for: ${duplicateDates.join(", ")}`);
+      return;
+    }
+
+    // ✅ All good, proceed to submit
+    setIsSubmitting(true);
     try {
-      await axios.post(`${backendUrl}/api/availability`, formData);
-      toast.success("Attendance submitted successfully!");
-      navigate("/student/MarkAttendance"); // Changed to root route
+      for (let selectedDate of formData.dates) {
+        const formattedDate = selectedDate.toDate().toISOString().split("T")[0];
+
+        await axios.post(`${backendUrl}/api/availability`, {
+          ...formData,
+          date: formattedDate,
+        });
+      }
+
+      toast.success("✅ Attendance submitted successfully!");
+      navigate("/student/MarkAttendance");
     } catch (err) {
-      toast.error("Failed to submit attendance");
+      toast.error("❌ Failed to submit attendance");
     } finally {
       setIsSubmitting(false);
     }
@@ -155,7 +181,6 @@ const AddAttendance = () => {
   const today = new Date();
   const maxDate = new Date();
   maxDate.setDate(today.getDate() + 7);
-  const formatDate = (date) => date.toISOString().split("T")[0];
 
   if (loading)
     return <div className="text-center py-8">Loading student data...</div>;
@@ -171,7 +196,6 @@ const AddAttendance = () => {
             name="studentName"
             value={formData.studentName}
             onChange={handleChange}
-            onKeyPress={handleKeyPress}
             placeholder="Enter student full name"
             className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 ${
               errors.studentName ? "border-red-500" : "border-gray-300"
@@ -186,24 +210,13 @@ const AddAttendance = () => {
           <input
             name="email"
             value={formData.email}
-            onChange={handleChange}
-            placeholder="Student's email"
-            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
-            required
             disabled
+            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500"
           />
         </div>
 
-        <input
-          type="hidden"
-          name="busId"
-          value={formData.busId}
-        />
-        <input
-          type="hidden"
-          name="noPlate"
-          value={formData.noPlate}
-        />
+        <input type="hidden" name="busId" value={formData.busId} />
+        <input type="hidden" name="noPlate" value={formData.noPlate} />
 
         <div className="mb-4">
           <label className="block text-gray-700 font-medium mb-1">Coming?</label>
@@ -267,29 +280,37 @@ const AddAttendance = () => {
         )}
 
         <div className="mb-4">
-          <label className="block text-gray-700 font-medium mb-1">Date</label>
-          <input
-            type="date"
-            name="date"
-            value={formData.date}
-            onChange={handleChange}
-            min={formatDate(today)}
-            max={formatDate(maxDate)}
-            className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 ${
-              errors.date ? "border-red-500" : "border-gray-300"
-            }`}
-            required
+          <label className="block text-gray-700 font-medium mb-1">Select Dates (within 7 days)</label>
+          <DatePicker
+            multiple
+            value={formData.dates}
+            onChange={(dates) => setFormData((prev) => ({ ...prev, dates }))}
+            minDate={today}
+            maxDate={maxDate}
+            format="YYYY-MM-DD"
+            className="custom-datepicker"
+            mapDays={({ date }) => {
+              const day = date.weekDay.index; // 0 = Sunday, 6 = Saturday
+              if (day === 0 || day === 6) {
+                return {
+                  disabled: true,
+                  style: { color: "#ccc", textDecoration: "line-through" },
+                };
+              }
+            }}
           />
-          {errors.date && <p className="text-red-500 text-sm mt-1">{errors.date}</p>}
+          {errors.dates && <p className="text-red-500 text-sm mt-1">{errors.dates}</p>}
         </div>
 
-        <button
-          type="submit"
-          className="w-full py-3 bg-yellow-500 text-white font-semibold rounded-lg hover:bg-yellow-600 transition"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? "Submitting..." : "Submit Attendance"}
-        </button>
+        <div className="flex flex-col space-y-2">
+          <button
+            type="submit"
+            className="w-full py-3 bg-yellow-500 text-white font-semibold rounded-lg hover:bg-yellow-600 transition"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Submitting..." : "Submit Attendance"}
+          </button>
+        </div>
       </form>
       <ToastContainer />
     </div>
