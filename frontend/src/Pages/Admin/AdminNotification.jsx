@@ -20,6 +20,12 @@ export default function AdminNotification() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [editDriverUsername, setEditDriverUsername] = useState("");
+  const [editBusId, setEditBusId] = useState("");
+  const [busOptions, setBusOptions] = useState([]);
+  const [errors, setErrors] = useState({});
+  const [editLevel, setEditLevel] = useState("INFO");
+
   const [analytics, setAnalytics] = useState({
     total: 0,
     critical: 0,
@@ -34,6 +40,19 @@ export default function AdminNotification() {
 
   useEffect(() => {
     loadNotifications();
+  }, []);
+
+  useEffect(() => {
+    axios
+      .get(`${backendUrl}/getAllBusses`, { withCredentials: true })
+      .then((res) => {
+        const ids = res.data.map((bus) => bus.busId.toString());
+        setBusOptions(["ADMIN", ...ids]); // Include ADMIN option
+      })
+      .catch((err) => {
+        console.error(err);
+        toast.error("Failed to load buses.");
+      });
   }, []);
 
   const loadNotifications = async () => {
@@ -80,13 +99,25 @@ export default function AdminNotification() {
     setEditingNotification(notification);
     setEditTitle(notification.title);
     setEditMessage(notification.message);
+    setEditDriverUsername(notification.driverUsername || "");
+    setEditBusId(notification.busId || "");
+    setEditLevel(notification.level || "INFO"); // <- Add this line
   };
 
   const handleEditSave = () => {
-    if (!editTitle.trim() || !editMessage.trim()) {
-      toast.error("Title and Message cannot be empty!");
+    const newErrors = {};
+
+    if (!editBusId) newErrors.busId = "Please select a Bus ID.";
+    if (!editDriverUsername.trim())
+      newErrors.driverUsername = "Driver Username is required";
+    if (!editTitle.trim()) newErrors.title = "Title is required.";
+    if (!editMessage.trim()) newErrors.message = "Message is required.";
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
+
     axios
       .put(
         `${backendUrl}/api/notifications/update/${editingNotification.id}`,
@@ -94,13 +125,18 @@ export default function AdminNotification() {
           ...editingNotification,
           title: editTitle.trim(),
           message: editMessage.trim(),
+          driverUsername: editDriverUsername.trim(),
+          busId: editBusId.trim(),
+          level: editLevel, // <-- Add this
           timestamp: new Date(),
         },
+
         { withCredentials: true }
       )
       .then(() => {
         toast.success("Notification updated!");
         setEditingNotification(null);
+        setErrors({});
         loadNotifications();
       })
       .catch(() => {
@@ -313,18 +349,95 @@ export default function AdminNotification() {
             </h3>
             <input
               type="text"
+              value={editDriverUsername}
+              onChange={(e) => {
+                let input = e.target.value
+                  .replace(/[^A-Za-z\s]/g, "")
+                  .replace(/\s+/g, " ")
+                  .trimStart();
+                setEditDriverUsername(input);
+                setErrors((prev) => ({ ...prev, driverUsername: "" }));
+              }}
+              className={`w-full border ${
+                errors.driverUsername ? "border-red-500" : "border-gray-300"
+              } rounded-lg p-3 mb-1 focus:ring-2 focus:ring-blue-500`}
+              placeholder="Driver Username"
+            />
+            {errors.driverUsername && (
+              <p className="text-red-500 text-sm mb-2">
+                {errors.driverUsername}
+              </p>
+            )}
+
+            <select
+              value={editBusId}
+              onChange={(e) => {
+                setEditBusId(e.target.value);
+                setErrors((prev) => ({ ...prev, busId: "" }));
+              }}
+              className={`w-full border ${
+                errors.busId ? "border-red-500" : "border-gray-300"
+              } rounded-lg p-3 mb-1 focus:ring-2 focus:ring-blue-500`}
+            >
+              <option value="">-- Select Bus ID or Admin --</option>
+              {busOptions.map((id) => (
+                <option key={id} value={id}>
+                  {id}
+                </option>
+              ))}
+            </select>
+            {errors.busId && (
+              <p className="text-red-500 text-sm mb-2">{errors.busId}</p>
+            )}
+
+            <input
+              type="text"
               value={editTitle}
-              onChange={(e) => setEditTitle(e.target.value)}
-              className="w-full border rounded-lg p-3 mb-4 focus:ring-2 focus:ring-blue-500"
+              onChange={(e) => {
+                const cleaned = e.target.value.replace(
+                  /[^A-Za-z0-9 .,'"-]/g,
+                  ""
+                );
+                setEditTitle(cleaned);
+                setErrors((prev) => ({ ...prev, title: "" }));
+              }}
+              className={`w-full border ${
+                errors.title ? "border-red-500" : "border-gray-300"
+              } rounded-lg p-3 mb-1 focus:ring-2 focus:ring-blue-500`}
               placeholder="Title"
             />
+            {errors.title && (
+              <p className="text-red-500 text-sm mb-2">{errors.title}</p>
+            )}
+
+            <select
+              value={editLevel}
+              onChange={(e) => setEditLevel(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg p-3 mb-1 focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="INFO">🔵 Info - General Notice</option>
+              <option value="WARNING">🟠 Warning - Important Notice</option>
+              <option value="CRITICAL">
+                🔴 Critical - Immediate Attention
+              </option>
+            </select>
+
             <textarea
               value={editMessage}
-              onChange={(e) => setEditMessage(e.target.value)}
+              onChange={(e) => {
+                setEditMessage(e.target.value);
+                setErrors((prev) => ({ ...prev, message: "" }));
+              }}
               rows={5}
-              className="w-full border rounded-lg p-3 focus:ring-2 focus:ring-blue-500"
+              className={`w-full border ${
+                errors.message ? "border-red-500" : "border-gray-300"
+              } rounded-lg p-3 focus:ring-2 focus:ring-blue-500`}
               placeholder="Message"
             />
+            {errors.message && (
+              <p className="text-red-500 text-sm mt-1">{errors.message}</p>
+            )}
+
             <div className="flex justify-end gap-4 mt-6">
               <button
                 onClick={() => setEditingNotification(null)}

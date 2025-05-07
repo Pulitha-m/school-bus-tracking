@@ -14,6 +14,7 @@ export default function AddNotification() {
   const [level, setLevel] = useState("INFO");
   const [timestamp, setTimestamp] = useState("");
   const [loading, setLoading] = useState(false);
+  const [rating, setRating] = useState("");
 
   const [errors, setErrors] = useState({});
   const [shake, setShake] = useState(false);
@@ -27,7 +28,7 @@ export default function AddNotification() {
         .get(`${backendUrl}/getDriverById/${id}`, { withCredentials: true })
         .then((res) => {
           if (res.data.busId) {
-            setBusId(res.data.busId); // ✅ Save actual busId
+            setBusId(res.data.busId);
           } else {
             toast.error("Bus not assigned to this driver!");
           }
@@ -42,10 +43,8 @@ export default function AddNotification() {
   const handleDriverUsernameChange = (e) => {
     let input = e.target.value;
 
-    // Allow only letters and spaces
     input = input.replace(/[^A-Za-z\s]/g, "");
 
-    // Remove extra spaces (e.g., double or trailing spaces)
     input = input.replace(/\s+/g, " ").trimStart();
 
     setDriverUsername(input);
@@ -111,7 +110,7 @@ export default function AddNotification() {
   };
 
   const handleClear = () => {
-    setDriverUsername("@");
+    setDriverUsername("");
     setTitle("");
     setMessage("");
     setLevel("INFO");

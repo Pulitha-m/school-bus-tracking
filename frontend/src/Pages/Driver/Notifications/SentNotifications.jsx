@@ -25,6 +25,8 @@ export default function SentNotifications() {
   const [editingNotification, setEditingNotification] = useState(null);
   const [editTitle, setEditTitle] = useState("");
   const [editMessage, setEditMessage] = useState("");
+  const [editDriverUsername, setEditDriverUsername] = useState("");
+  const [editLevel, setEditLevel] = useState("INFO");
 
   useEffect(() => {
     const sessionData = sessionStorage.getItem("user");
@@ -37,6 +39,7 @@ export default function SentNotifications() {
         .then((res) => {
           if (res.data.busId) {
             fetchNotifications(res.data.busId);
+            // fetchLatest(res.data.busId);
           } else {
             toast.error("Bus not assigned to this driver!");
             setLoading(false);
@@ -66,12 +69,36 @@ export default function SentNotifications() {
         setFilteredNotifications(sorted);
         setLoading(false);
       })
+
       .catch((err) => {
         console.error(err);
         toast.error("Failed to fetch sent notifications.");
         setLoading(false);
       });
   };
+
+  // const fetchLatest = (busId) => {
+  //   axios
+  //     .get(`${backendUrl}/api/notifications/getLatestByBusId/${busId}`, {
+  //       withCredentials: true,
+  //     })
+  //     .then((res) => {
+  //       if (res.data) {
+  //         console.log("Latest notification:", res.data);
+  //         setSentNotifications([res.data]);
+  //         setFilteredNotifications([res.data]);
+  //       } else {
+  //         setSentNotifications([]);
+  //         setFilteredNotifications([]);
+  //       }
+  //       setLoading(false);
+  //     })
+  //     .catch((err) => {
+  //       console.error(err);
+  //       toast.error("Failed to fetch sent notifications.");
+  //       setLoading(false);
+  //     });
+  // };
 
   const handleFilterChange = (e) => {
     const selectedFilter = e.target.value;
@@ -107,11 +134,17 @@ export default function SentNotifications() {
     setEditingNotification(notification);
     setEditTitle(notification.title);
     setEditMessage(notification.message);
+    setEditDriverUsername(notification.driverUsername || "");
+    setEditLevel(notification.level || "INFO"); // <- Add this line
   };
 
   const handleEditSave = () => {
-    if (!editTitle.trim() || !editMessage.trim()) {
-      toast.error("Title and Message cannot be empty!");
+    if (
+      !editTitle.trim() ||
+      !editMessage.trim() ||
+      !editDriverUsername.trim()
+    ) {
+      toast.error("Title, Message, and Driver Username cannot be empty!");
       return;
     }
 
@@ -122,7 +155,9 @@ export default function SentNotifications() {
           ...editingNotification,
           title: editTitle.trim(),
           message: editMessage.trim(),
+          driverUsername: editDriverUsername.trim(),
           timestamp: new Date(),
+          level: editLevel,
         },
         { withCredentials: true }
       )
@@ -207,6 +242,7 @@ export default function SentNotifications() {
                     </h3>
                     <p className="text-sm text-gray-500 mb-1">
                       To: Assigned Bus
+                      {/* <br /> Rating : {notification.rating} */}
                     </p>
                   </div>
                   <span className="text-xs text-gray-400 flex items-center gap-1">
@@ -262,17 +298,45 @@ export default function SentNotifications() {
             </h3>
             <input
               type="text"
+              value={editDriverUsername}
+              onChange={(e) => {
+                let input = e.target.value;
+                input = input.replace(/[^A-Za-z\s]/g, ""); // Remove non-letters/spaces
+                input = input.replace(/\s+/g, " ").trimStart(); // Normalize spacing
+                setEditDriverUsername(input);
+              }}
+              className="w-full border rounded-lg p-3 mb-4 focus:ring-2 focus:ring-blue-500"
+              placeholder="Driver Username"
+            />
+
+            <input
+              type="text"
               value={editTitle}
               onChange={(e) => setEditTitle(e.target.value)}
               className="w-full border rounded-lg p-3 mb-4 focus:ring-2 focus:ring-blue-500"
               placeholder="Title"
             />
+
+            {/* Level Selection */}
+            <select
+              value={editLevel}
+              onChange={(e) => setEditLevel(e.target.value)}
+              className="w-full border rounded-lg p-3 mb-4 focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="INFO">🔵 Info - General Notice</option>
+              <option value="WARNING">🟠 Warning - Important Notice</option>
+              <option value="CRITICAL">
+                🔴 Critical - Immediate Attention
+              </option>
+            </select>
+
             <textarea
               value={editMessage}
               onChange={(e) => setEditMessage(e.target.value)}
               rows={5}
               className="w-full border rounded-lg p-3 focus:ring-2 focus:ring-blue-500"
-              placeholder="Message"
+              place
+              holder="Message"
             />
 
             <div className="flex justify-end gap-4 mt-6">
