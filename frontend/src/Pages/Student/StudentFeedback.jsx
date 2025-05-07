@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import {
   BusIcon,
   CheckCircleIcon,
@@ -11,24 +11,24 @@ import {
   PencilIcon,
   TrashIcon,
   PlusIcon,
-} from 'lucide-react';
+} from "lucide-react";
 
 const FeedbackForm = ({ initialData = null, onSubmitSuccess }) => {
   const [formData, setFormData] = useState({
-    punctuality: '',
-    punctualityComment: '',
-    driverBehavior: '',
-    driverExperience: '',
-    vehicleCondition: '',
-    vehicleNotes: '',
-    safety: '',
-    safetyExplanation: '',
-    safetyProtocols: '',
-    safetyConcerns: '',
-    communication: '',
-    communicationSuggestions: '',
+    punctuality: "",
+    punctualityComment: "",
+    driverBehavior: "",
+    driverExperience: "",
+    vehicleCondition: "",
+    vehicleNotes: "",
+    safety: "",
+    safetyExplanation: "",
+    safetyProtocols: "",
+    safetyConcerns: "",
+    communication: "",
+    communicationSuggestions: "",
     overallRating: 0,
-    generalFeedback: '',
+    generalFeedback: "",
   });
 
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -50,26 +50,26 @@ const FeedbackForm = ({ initialData = null, onSubmitSuccess }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('Submitting feedback:', formData);
+    console.log("Submitting feedback:", formData);
     setIsSubmitted(true);
     if (onSubmitSuccess) {
       onSubmitSuccess();
     }
     setFormData({
-      punctuality: '',
-      punctualityComment: '',
-      driverBehavior: '',
-      driverExperience: '',
-      vehicleCondition: '',
-      vehicleNotes: '',
-      safety: '',
-      safetyExplanation: '',
-      safetyProtocols: '',
-      safetyConcerns: '',
-      communication: '',
-      communicationSuggestions: '',
+      punctuality: "",
+      punctualityComment: "",
+      driverBehavior: "",
+      driverExperience: "",
+      vehicleCondition: "",
+      vehicleNotes: "",
+      safety: "",
+      safetyExplanation: "",
+      safetyProtocols: "",
+      safetyConcerns: "",
+      communication: "",
+      communicationSuggestions: "",
       overallRating: 0,
-      generalFeedback: '',
+      generalFeedback: "",
     });
   };
 
@@ -78,9 +78,12 @@ const FeedbackForm = ({ initialData = null, onSubmitSuccess }) => {
       <div className="max-w-3xl mx-auto py-8 px-4">
         <div className="bg-white rounded-lg shadow-md p-8 text-center">
           <CheckCircleIcon className="w-16 h-16 text-green-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold mb-2">Thank You for Your Feedback!</h2>
+          <h2 className="text-2xl font-bold mb-2">
+            Thank You for Your Feedback!
+          </h2>
           <p className="text-gray-600 mb-6">
-            Your feedback has been submitted successfully and will help us improve our bus service.
+            Your feedback has been submitted successfully and will help us
+            improve our bus service.
           </p>
           <button
             onClick={() => setIsSubmitted(false)}
@@ -100,7 +103,8 @@ const FeedbackForm = ({ initialData = null, onSubmitSuccess }) => {
         <h1 className="text-2xl font-bold">School Bus Feedback Form</h1>
       </div>
       <p className="text-gray-600 mb-6">
-        Your feedback helps us improve our transportation services. Please take a moment to share your experience.
+        Your feedback helps us improve our transportation services. Please take
+        a moment to share your experience.
       </p>
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* Punctuality Section */}
@@ -110,9 +114,16 @@ const FeedbackForm = ({ initialData = null, onSubmitSuccess }) => {
             <h2 className="text-xl font-semibold">1. Punctuality</h2>
           </div>
           <div className="mb-4">
-            <p className="mb-2">🕒 Was the bus on time for pickup and drop-off?</p>
+            <p className="mb-2">
+              🕒 Was the bus on time for pickup and drop-off?
+            </p>
             <div className="space-y-2">
-              {['Always on time', 'Sometimes late', 'Often late', 'Early pickup/drop-off'].map((option) => (
+              {[
+                "Always on time",
+                "Sometimes late",
+                "Often late",
+                "Early pickup/drop-off",
+              ].map((option) => (
                 <label key={option} className="flex items-center">
                   <input
                     type="radio"
@@ -145,9 +156,11 @@ const FeedbackForm = ({ initialData = null, onSubmitSuccess }) => {
             <h2 className="text-xl font-semibold">2. Driver Behavior</h2>
           </div>
           <div className="mb-4">
-            <p className="mb-2">👨‍✈️ Was the driver courteous and professional?</p>
+            <p className="mb-2">
+              👨‍✈️ Was the driver courteous and professional?
+            </p>
             <div className="space-y-2">
-              {['Yes', 'No'].map((option) => (
+              {["Yes", "No"].map((option) => (
                 <label key={option} className="flex items-center">
                   <input
                     type="radio"
@@ -182,7 +195,7 @@ const FeedbackForm = ({ initialData = null, onSubmitSuccess }) => {
           <div className="mb-4">
             <p className="mb-2">🚍 Was the bus clean and comfortable?</p>
             <div className="space-y-2">
-              {['Very clean', 'Acceptable', 'Poor condition'].map((option) => (
+              {["Very clean", "Acceptable", "Poor condition"].map((option) => (
                 <label key={option} className="flex items-center">
                   <input
                     type="radio"
@@ -217,7 +230,7 @@ const FeedbackForm = ({ initialData = null, onSubmitSuccess }) => {
           <div className="mb-4">
             <p className="mb-2">🛡️ Did you feel safe during the trip?</p>
             <div className="space-y-2">
-              {['Yes', 'No'].map((option) => (
+              {["Yes", "No"].map((option) => (
                 <label key={option} className="flex items-center">
                   <input
                     type="radio"
@@ -243,9 +256,12 @@ const FeedbackForm = ({ initialData = null, onSubmitSuccess }) => {
             />
           </div>
           <div className="mb-4">
-            <p className="mb-2">🪖 Were safety protocols (e.g., seatbelts, supervised entry/exit) followed?</p>
+            <p className="mb-2">
+              🪖 Were safety protocols (e.g., seatbelts, supervised entry/exit)
+              followed?
+            </p>
             <div className="space-y-2">
-              {['Yes', 'No'].map((option) => (
+              {["Yes", "No"].map((option) => (
                 <label key={option} className="flex items-center">
                   <input
                     type="radio"
@@ -278,9 +294,11 @@ const FeedbackForm = ({ initialData = null, onSubmitSuccess }) => {
             <h2 className="text-xl font-semibold">5. Communication</h2>
           </div>
           <div className="mb-4">
-            <p className="mb-2">📞 Are you satisfied with how issues or delays are communicated?</p>
+            <p className="mb-2">
+              📞 Are you satisfied with how issues or delays are communicated?
+            </p>
             <div className="space-y-2">
-              {['Yes', 'No'].map((option) => (
+              {["Yes", "No"].map((option) => (
                 <label key={option} className="flex items-center">
                   <input
                     type="radio"
@@ -323,7 +341,11 @@ const FeedbackForm = ({ initialData = null, onSubmitSuccess }) => {
                   className="focus:outline-none mr-1"
                 >
                   <StarIcon
-                    className={`h-8 w-8 ${formData.overallRating >= rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
+                    className={`h-8 w-8 ${
+                      formData.overallRating >= rating
+                        ? "text-yellow-400 fill-yellow-400"
+                        : "text-gray-300"
+                    }`}
                   />
                 </button>
               ))}
@@ -357,7 +379,12 @@ const FeedbackForm = ({ initialData = null, onSubmitSuccess }) => {
 const Rating = ({ rating }) => (
   <div className="flex">
     {[...Array(5)].map((_, i) => (
-      <span key={i} className={`text-sm ${i < rating ? 'text-yellow-400' : 'text-gray-300'}`}>
+      <span
+        key={i}
+        className={`text-sm ${
+          i < rating ? "text-yellow-400" : "text-gray-300"
+        }`}
+      >
         ★
       </span>
     ))}
@@ -366,7 +393,7 @@ const Rating = ({ rating }) => (
 
 const FeedbackList = ({ feedbacks, onEdit, onAdd, onView, onDelete }) => {
   const handleDelete = (id) => {
-    if (window.confirm('Are you sure you want to delete this feedback?')) {
+    if (window.confirm("Are you sure you want to delete this feedback?")) {
       onDelete(id);
     }
   };
@@ -391,20 +418,38 @@ const FeedbackList = ({ feedbacks, onEdit, onAdd, onView, onDelete }) => {
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bus Route</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rating</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  ID
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Date
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Bus Route
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Rating
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {feedbacks.map((feedback) => (
                 <tr key={feedback.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{feedback.id}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{feedback.date}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{feedback.busRoute}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    {feedback.id}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {feedback.date}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {feedback.busRoute}
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <Rating rating={feedback.feedback.overallRating} />
                   </td>
@@ -414,13 +459,22 @@ const FeedbackList = ({ feedbacks, onEdit, onAdd, onView, onDelete }) => {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button onClick={() => onView(feedback)} className="text-orange-500 hover:text-orange-600 mr-3">
+                    <button
+                      onClick={() => onView(feedback)}
+                      className="text-orange-500 hover:text-orange-600 mr-3"
+                    >
                       View
                     </button>
-                    <button onClick={() => onEdit(feedback)} className="text-blue-500 hover:text-blue-600 mr-3">
+                    <button
+                      onClick={() => onEdit(feedback)}
+                      className="text-blue-500 hover:text-blue-600 mr-3"
+                    >
                       <PencilIcon className="h-4 w-4" />
                     </button>
-                    <button onClick={() => handleDelete(feedback.id)} className="text-red-500 hover:text-red-600">
+                    <button
+                      onClick={() => handleDelete(feedback.id)}
+                      className="text-red-500 hover:text-red-600"
+                    >
                       <TrashIcon className="h-4 w-4" />
                     </button>
                   </td>
@@ -450,7 +504,9 @@ const FeedbackView = ({ feedback }) => {
       <div className="bg-orange-500 text-white rounded-lg p-6 mb-6">
         <div className="flex items-center justify-between mb-2">
           <h1 className="text-2xl font-bold">Feedback Report</h1>
-          <span className="bg-green-500 text-white text-sm px-3 py-1 rounded-full">Submitted</span>
+          <span className="bg-green-500 text-white text-sm px-3 py-1 rounded-full">
+            Submitted
+          </span>
         </div>
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
@@ -468,27 +524,39 @@ const FeedbackView = ({ feedback }) => {
           <div className="space-y-2">
             <div className="flex justify-between">
               <span className="text-gray-600">Status:</span>
-              <span className="font-medium">{feedback.feedback.punctuality}</span>
+              <span className="font-medium">
+                {feedback.feedback.punctuality}
+              </span>
             </div>
-            <p className="text-gray-600 text-sm">{feedback.feedback.punctualityComment}</p>
+            <p className="text-gray-600 text-sm">
+              {feedback.feedback.punctualityComment}
+            </p>
           </div>
         </FeedbackSection>
         <FeedbackSection icon={UserIcon} title="Driver Behavior">
           <div className="space-y-2">
             <div className="flex justify-between">
               <span className="text-gray-600">Courteous and Professional:</span>
-              <span className="font-medium">{feedback.feedback.driverBehavior}</span>
+              <span className="font-medium">
+                {feedback.feedback.driverBehavior}
+              </span>
             </div>
-            <p className="text-gray-600 text-sm">{feedback.feedback.driverExperience}</p>
+            <p className="text-gray-600 text-sm">
+              {feedback.feedback.driverExperience}
+            </p>
           </div>
         </FeedbackSection>
         <FeedbackSection icon={BusIcon} title="Vehicle Condition">
           <div className="space-y-2">
             <div className="flex justify-between">
               <span className="text-gray-600">Condition:</span>
-              <span className="font-medium">{feedback.feedback.vehicleCondition}</span>
+              <span className="font-medium">
+                {feedback.feedback.vehicleCondition}
+              </span>
             </div>
-            <p className="text-gray-600 text-sm">{feedback.feedback.vehicleNotes}</p>
+            <p className="text-gray-600 text-sm">
+              {feedback.feedback.vehicleNotes}
+            </p>
           </div>
         </FeedbackSection>
         <FeedbackSection icon={ShieldIcon} title="Safety">
@@ -499,18 +567,26 @@ const FeedbackView = ({ feedback }) => {
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Safety Protocols Followed:</span>
-              <span className="font-medium">{feedback.feedback.safetyProtocols}</span>
+              <span className="font-medium">
+                {feedback.feedback.safetyProtocols}
+              </span>
             </div>
-            <p className="text-gray-600 text-sm">{feedback.feedback.safetyConcerns}</p>
+            <p className="text-gray-600 text-sm">
+              {feedback.feedback.safetyConcerns}
+            </p>
           </div>
         </FeedbackSection>
         <FeedbackSection icon={MessageSquareIcon} title="Communication">
           <div className="space-y-2">
             <div className="flex justify-between">
               <span className="text-gray-600">Satisfaction:</span>
-              <span className="font-medium">{feedback.feedback.communication}</span>
+              <span className="font-medium">
+                {feedback.feedback.communication}
+              </span>
             </div>
-            <p className="text-gray-600 text-sm">{feedback.feedback.communicationSuggestions}</p>
+            <p className="text-gray-600 text-sm">
+              {feedback.feedback.communicationSuggestions}
+            </p>
           </div>
         </FeedbackSection>
         <FeedbackSection icon={ThumbsUpIcon} title="Overall Satisfaction">
@@ -520,8 +596,12 @@ const FeedbackView = ({ feedback }) => {
               <Rating rating={feedback.feedback.overallRating} />
             </div>
             <div>
-              <span className="text-gray-600 block mb-2">General Feedback:</span>
-              <p className="text-gray-600 text-sm">{feedback.feedback.generalFeedback}</p>
+              <span className="text-gray-600 block mb-2">
+                General Feedback:
+              </span>
+              <p className="text-gray-600 text-sm">
+                {feedback.feedback.generalFeedback}
+              </p>
             </div>
           </div>
         </FeedbackSection>
@@ -530,24 +610,24 @@ const FeedbackView = ({ feedback }) => {
   );
 };
 
-const App = () => {
-  const [view, setView] = useState('list');
+const Feedback = () => {
+  const [view, setView] = useState("list");
   const [selectedFeedback, setSelectedFeedback] = useState(null);
   const [feedbacks, setFeedbacks] = useState([]);
 
   const handleEdit = (feedback) => {
     setSelectedFeedback(feedback);
-    setView('form');
+    setView("form");
   };
 
   const handleAdd = () => {
     setSelectedFeedback(null);
-    setView('form');
+    setView("form");
   };
 
   const handleView = (feedback) => {
     setSelectedFeedback(feedback);
-    setView('view');
+    setView("view");
   };
 
   const handleDelete = (id) => {
@@ -556,7 +636,7 @@ const App = () => {
 
   return (
     <div className="bg-gray-100 min-h-screen w-full">
-      {view === 'list' && (
+      {view === "list" && (
         <FeedbackList
           feedbacks={feedbacks}
           onEdit={handleEdit}
@@ -565,24 +645,27 @@ const App = () => {
           onDelete={handleDelete}
         />
       )}
-      {view === 'form' && (
+      {view === "form" && (
         <div>
           <div className="max-w-3xl mx-auto pt-4 px-4">
             <button
-              onClick={() => setView('list')}
+              onClick={() => setView("list")}
               className="text-orange-500 hover:text-orange-600 mb-4 flex items-center"
             >
               ← Back to List
             </button>
           </div>
-          <FeedbackForm initialData={selectedFeedback} onSubmitSuccess={() => setView('list')} />
+          <FeedbackForm
+            initialData={selectedFeedback}
+            onSubmitSuccess={() => setView("list")}
+          />
         </div>
       )}
-      {view === 'view' && (
+      {view === "view" && (
         <div>
           <div className="max-w-4xl mx-auto pt-4 px-4">
             <button
-              onClick={() => setView('list')}
+              onClick={() => setView("list")}
               className="text-orange-500 hover:text-orange-600 mb-4 flex items-center"
             >
               ← Back to List
@@ -595,4 +678,4 @@ const App = () => {
   );
 };
 
-export default App;
+export default Feedback;

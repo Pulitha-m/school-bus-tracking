@@ -25,6 +25,7 @@ export default function NotificationManagement() {
   const [userBusId, setUserBusId] = useState("");
   const [userUsername, setUserUsername] = useState("");
   const [loading, setLoading] = useState(true);
+  const [showAdminSent, setShowAdminSent] = useState(true);
 
   useEffect(() => {
     const sessionData = sessionStorage.getItem("user");
@@ -61,11 +62,16 @@ export default function NotificationManagement() {
   };
 
   const filteredNotifications = notifications
-    .filter(
-      (n) =>
-        (n.busId === userBusId && n.driverUsername === "@admin") ||
-        n.busId === "ADMIN"
-    )
+    .filter((n) => {
+      if (showAdminSent) {
+        return (
+          (n.busId === userBusId && n.driverUsername === "@admin") ||
+          n.busId === "ADMIN"
+        );
+      } else {
+        return n.driverUsername === userUsername;
+      }
+    })
     .filter((n) => {
       if (selectedFilter === "unread") return !n.read;
       if (selectedFilter === "alerts") return n.level === "CRITICAL";
@@ -94,79 +100,64 @@ export default function NotificationManagement() {
   };
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto p-6">
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 space-y-6">
-        {/* Header and Tabs */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-semibold text-gray-800">
-              {activeTab === "inbox"
-                ? "Inbox"
-                : activeTab === "compose"
-                ? "Compose Notification"
-                : "Sent Notifications"}
-            </h2>
-            <p className="text-gray-500 text-sm">
-              {activeTab === "inbox"
-                ? "Notifications sent by @admin or global announcements."
-                : activeTab === "compose"
-                ? "Send a new notification."
-                : "View sent notifications."}
-            </p>
-          </div>
+    <div className="container mx-auto p-4 space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold text-gray-800">
+          Notification Management
+        </h1>
+        <p className="text-gray-600">Manage and track notifications</p>
+      </div>
 
-          {/* Tabs */}
-          <div className="flex gap-2">
-            <button
-              onClick={() => setActiveTab("inbox")}
-              className={`px-4 py-2 rounded-lg transition ${
-                activeTab === "inbox"
-                  ? "bg-blue-600 text-white"
-                  : "border border-gray-300 text-gray-600 hover:bg-gray-50"
-              }`}
-            >
-              <InboxIcon size={18} />
-            </button>
-            <button
-              onClick={() => setActiveTab("compose")}
-              className={`px-4 py-2 rounded-lg transition ${
-                activeTab === "compose"
-                  ? "bg-blue-600 text-white"
-                  : "border border-gray-300 text-gray-600 hover:bg-gray-50"
-              }`}
-            >
-              <PlusIcon size={18} />
-            </button>
-            <button
-              onClick={() => setActiveTab("sent")}
-              className={`px-4 py-2 rounded-lg transition ${
-                activeTab === "sent"
-                  ? "bg-blue-600 text-white"
-                  : "border border-gray-300 text-gray-600 hover:bg-gray-50"
-              }`}
-            >
-              <SendIcon size={18} />
-            </button>
+      <div className="bg-white rounded-lg shadow">
+        <div className="p-4 border-b flex flex-col md:flex-row md:items-center md:justify-between space-y-3 md:space-y-0">
+          <div className="flex items-center gap-4">
+            <div className="flex gap-2">
+              <button
+                onClick={() => setActiveTab("inbox")}
+                className={`px-4 py-2 rounded-lg transition flex items-center ${
+                  activeTab === "inbox"
+                    ? "bg-blue-600 text-white"
+                    : "border border-gray-300 text-gray-600 hover:bg-gray-50"
+                }`}
+              >
+                <InboxIcon size={18} className="mr-1" />
+                Inbox
+              </button>
+              <button
+                onClick={() => setActiveTab("compose")}
+                className={`px-4 py-2 rounded-lg transition flex items-center ${
+                  activeTab === "compose"
+                    ? "bg-blue-600 text-white"
+                    : "border border-gray-300 text-gray-600 hover:bg-gray-50"
+                }`}
+              >
+                <PlusIcon size={18} className="mr-1" />
+                Compose
+              </button>
+              <button
+                onClick={() => setActiveTab("sent")}
+                className={`px-4 py-2 rounded-lg transition flex items-center ${
+                  activeTab === "sent"
+                    ? "bg-blue-600 text-white"
+                    : "border border-gray-300 text-gray-600 hover:bg-gray-50"
+                }`}
+              >
+                <SendIcon size={18} className="mr-1" />
+                Sent
+              </button>
+            </div>
           </div>
-        </div>
-
-        {/* Content */}
-        {activeTab === "inbox" ? (
-          <>
-            {/* Search & Filter */}
-            <div className="flex items-center gap-4 mb-6">
-              <div className="flex-1 relative">
-                <SearchIcon
-                  className="absolute left-3 top-2.5 text-gray-400"
-                  size={18}
-                />
+          {activeTab === "inbox" && (
+            <div className="flex items-center gap-4">
+              <div className="relative w-full md:w-64">
                 <input
                   type="text"
                   placeholder="Search notifications..."
+                  className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
                 />
+                <SearchIcon className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
               </div>
               <select
                 value={selectedFilter}
@@ -179,55 +170,96 @@ export default function NotificationManagement() {
                 <option value="info">Information</option>
               </select>
             </div>
+          )}
+        </div>
 
-            {/* Notifications List */}
+        {activeTab === "inbox" ? (
+          <div className="p-4">
+            <div className="mb-4">
+              <button
+                onClick={() => setShowAdminSent(true)}
+                className={`px-4 py-2 rounded-l-lg ${
+                  showAdminSent
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-100 text-gray-700"
+                }`}
+              >
+                Admin Sent
+              </button>
+            </div>
             {loading ? (
-              <div className="text-center text-gray-400 py-8">
-                Loading notifications...
-              </div>
+              <div className="p-8 text-center">Loading notifications...</div>
             ) : filteredNotifications.length > 0 ? (
-              filteredNotifications.map((n) => (
-                <div
-                  key={n.id}
-                  className={`flex items-start border-2 border-gray-200 rounded-lg shadow-sm hover:shadow-md transition p-4 relative ${
-                    n.read ? "bg-white" : "bg-yellow-50"
-                  }`}
-                >
-                  <div className="flex items-center justify-center w-12 h-12 bg-white rounded-full border border-gray-200 shadow-sm mr-4">
-                    {getIcon(n.level)}
-                  </div>
-
-                  <div className="flex-1">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="font-medium text-gray-900">{n.title}</h3>
-                        <p className="text-gray-600 text-sm">{n.message}</p>
-                      </div>
-                      <span className="text-xs text-gray-400">
-                        {new Date(n.timestamp).toLocaleString()}
-                      </span>
-                    </div>
-
-                    {/* Read/Unread Toggle */}
-                    <div className="flex justify-end items-center mt-4">
-                      <button
-                        onClick={() => handleMarkReadToggle(n.id)}
-                        className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
-                      >
-                        <CheckCircleIcon size={16} />
-                        {n.read ? "Mark as Unread" : "Mark as Read"}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="bg-gray-50">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        Icon
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        Title
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        Message
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        Timestamp
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        Status
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {filteredNotifications.map((n) => (
+                      <tr key={n.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {getIcon(n.level)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {n.title}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-500">
+                          {n.message}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {new Date(n.timestamp).toLocaleString()}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs ${
+                              n.read
+                                ? "bg-green-100 text-green-800"
+                                : "bg-yellow-100 text-yellow-800"
+                            }`}
+                          >
+                            {n.read ? "Read" : "Unread"}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <button
+                            onClick={() => handleMarkReadToggle(n.id)}
+                            className="px-3 py-1 text-xs font-medium bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
+                          >
+                            {n.read ? "Mark Unread" : "Mark Read"}
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             ) : (
-              <div className="text-center py-12">
+              <div className="p-8 text-center">
                 <InboxIcon className="text-gray-400 mx-auto" size={48} />
                 <p className="text-gray-500 mt-2">No notifications found</p>
               </div>
             )}
-          </>
+          </div>
         ) : activeTab === "compose" ? (
           <AddNotification />
         ) : (

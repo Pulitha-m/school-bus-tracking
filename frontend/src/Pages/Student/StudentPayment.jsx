@@ -1,29 +1,28 @@
 import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import axios from "axios";
-import { 
-  CreditCard, 
-  Banknote, 
-  Clock, 
-  CheckCircle, 
-  XCircle, 
-  Upload, 
+import {
+  CreditCard,
+  Banknote,
+  Clock,
+  CheckCircle,
+  XCircle,
+  Upload,
   Calendar,
   Loader,
-  AlertCircle
+  AlertCircle,
 } from "lucide-react";
 
 // Configure API base URL - works for both dev and production
-const API_BASE_URL = window.location.hostname === 'localhost' 
-  ? 'http://localhost:8080' 
-  : '';
+const API_BASE_URL =
+  window.location.hostname === "localhost" ? "http://localhost:8080" : "";
 
 const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: 10000,
   headers: {
-    'Content-Type': 'application/json'
-  }
+    "Content-Type": "application/json",
+  },
 });
 
 const StudentPayment = () => {
@@ -32,12 +31,12 @@ const StudentPayment = () => {
     amount: 0,
     nextDueDate: null,
     status: "LOADING",
-    isOverdue: false
+    isOverdue: false,
   });
   const [paymentHistory, setPaymentHistory] = useState([]);
   const [loading, setLoading] = useState({
     info: true,
-    history: true
+    history: true,
   });
   const [error, setError] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState("STRIPE");
@@ -47,27 +46,27 @@ const StudentPayment = () => {
 
   // Format currency (LKR)
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-LK', {
-      style: 'currency',
-      currency: 'LKR'
+    return new Intl.NumberFormat("en-LK", {
+      style: "currency",
+      currency: "LKR",
     }).format(amount || 0);
   };
 
   // Format date
   const formatDate = (dateString) => {
-    if (!dateString) return '-';
-    const options = { year: 'numeric', month: 'long', day: 'numeric' };
-    return new Date(dateString).toLocaleDateString('en-US', options);
+    if (!dateString) return "-";
+    const options = { year: "numeric", month: "long", day: "numeric" };
+    return new Date(dateString).toLocaleDateString("en-US", options);
   };
 
   // Get status icon
   const getPaymentStatusIcon = (status) => {
     const statusMap = {
-      'PAID': <CheckCircle className="h-5 w-5 text-green-500" />,
-      'PENDING': <Clock className="h-5 w-5 text-yellow-500" />,
-      'PENDING_APPROVAL': <Clock className="h-5 w-5 text-yellow-500" />,
-      'UNPAID': <XCircle className="h-5 w-5 text-red-500" />,
-      'OVERDUE': <XCircle className="h-5 w-5 text-red-500" />
+      PAID: <CheckCircle className="h-5 w-5 text-green-500" />,
+      PENDING: <Clock className="h-5 w-5 text-yellow-500" />,
+      PENDING_APPROVAL: <Clock className="h-5 w-5 text-yellow-500" />,
+      UNPAID: <XCircle className="h-5 w-5 text-red-500" />,
+      OVERDUE: <XCircle className="h-5 w-5 text-red-500" />,
     };
     return statusMap[status?.toUpperCase()] || null;
   };
@@ -91,32 +90,41 @@ const StudentPayment = () => {
     if (!studentEmail) return;
 
     try {
-      setLoading(prev => ({ ...prev, info: true }));
+      setLoading((prev) => ({ ...prev, info: true }));
       setError(null);
-      
+
       // Fetch current payment info
       const [infoResponse, historyResponse] = await Promise.all([
-        api.get(`/api/stripe/payment-details?username=${encodeURIComponent(studentEmail)}`),
-        api.get(`/api/stripe/getAllPayments?studentEmail=${encodeURIComponent(studentEmail)}`)
+        api.get(
+          `/api/stripe/payment-details?username=${encodeURIComponent(
+            studentEmail
+          )}`
+        ),
+        api.get(
+          `/api/stripe/getAllPayments?studentEmail=${encodeURIComponent(
+            studentEmail
+          )}`
+        ),
       ]);
-      
+
       setPaymentInfo({
         amount: infoResponse.data?.amount || 0,
         nextDueDate: infoResponse.data?.nextDueDate || null,
-        status: infoResponse.data?.status || 'UNPAID',
-        isOverdue: infoResponse.data?.isOverdue || false
+        status: infoResponse.data?.status || "UNPAID",
+        isOverdue: infoResponse.data?.isOverdue || false,
       });
 
       // Ensure paymentHistory is always an array
-      setPaymentHistory(Array.isArray(historyResponse?.data) ? historyResponse.data : []);
-      
+      setPaymentHistory(
+        Array.isArray(historyResponse?.data) ? historyResponse.data : []
+      );
     } catch (error) {
       console.error("Payment data fetch error:", error);
       setError(error.response?.data?.message || "Failed to load payment data");
       setPaymentHistory([]);
       toast.error("Failed to load payment information");
     } finally {
-      setLoading(prev => ({ info: false, history: false }));
+      setLoading((prev) => ({ info: false, history: false }));
     }
   };
 
@@ -126,7 +134,7 @@ const StudentPayment = () => {
     if (!file) return;
 
     // Validate file
-    if (!file.type.startsWith('image/')) {
+    if (!file.type.startsWith("image/")) {
       toast.error("Please upload an image file (JPEG, PNG)");
       return;
     }
@@ -148,10 +156,10 @@ const StudentPayment = () => {
 
     try {
       setIsProcessing(true);
-      const response = await api.post("/api/stripe/create-payment-intent", {
+      const response = await api.post("/api/stripe/create-checkout-session", {
         amount: paymentInfo.amount,
         email: studentEmail,
-        description: `Bus fee payment for ${studentEmail}`
+        description: `Bus fee payment for ${studentEmail}`,
       });
 
       if (response.data.url) {
@@ -181,8 +189,8 @@ const StudentPayment = () => {
 
       await api.post("/api/stripe/upload-slip", formData, {
         headers: {
-          "Content-Type": "multipart/form-data"
-        }
+          "Content-Type": "multipart/form-data",
+        },
       });
 
       toast.success("Payment slip submitted for verification");
@@ -244,13 +252,17 @@ const StudentPayment = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <div className="bg-gray-50 p-4 rounded">
             <p className="text-sm text-gray-500">Amount Due</p>
-            <p className="text-lg font-medium">{formatCurrency(paymentInfo.amount)}</p>
+            <p className="text-lg font-medium">
+              {formatCurrency(paymentInfo.amount)}
+            </p>
           </div>
           <div className="bg-gray-50 p-4 rounded">
             <p className="text-sm text-gray-500">Due Date</p>
             <p className="text-lg font-medium flex items-center gap-1">
               <Calendar className="h-5 w-5" />
-              {paymentInfo.nextDueDate ? formatDate(paymentInfo.nextDueDate) : 'Not set'}
+              {paymentInfo.nextDueDate
+                ? formatDate(paymentInfo.nextDueDate)
+                : "Not set"}
             </p>
           </div>
           <div className="bg-gray-50 p-4 rounded">
@@ -258,24 +270,24 @@ const StudentPayment = () => {
             <div className="flex items-center gap-2">
               {getPaymentStatusIcon(paymentInfo.status)}
               <span className="text-lg font-medium capitalize">
-                {paymentInfo.status?.toLowerCase().replace('_', ' ')}
+                {paymentInfo.status?.toLowerCase().replace("_", " ")}
               </span>
             </div>
           </div>
         </div>
 
         {/* Payment Method Section */}
-        {paymentInfo.status !== 'PAID' && (
+        {paymentInfo.status !== "PAID" && (
           <div className="border-t pt-6">
             <h3 className="text-lg font-medium mb-4">Make Payment</h3>
-            
+
             {/* Payment Method Selection */}
             <div className="flex gap-4 mb-6">
               <button
                 onClick={() => setPaymentMethod("STRIPE")}
                 className={`flex-1 py-3 px-4 rounded-lg border-2 flex items-center justify-center gap-2 ${
-                  paymentMethod === "STRIPE" 
-                    ? "border-yellow-500 bg-yellow-50 text-yellow-700" 
+                  paymentMethod === "STRIPE"
+                    ? "border-yellow-500 bg-yellow-50 text-yellow-700"
                     : "border-gray-300 hover:border-gray-400"
                 }`}
               >
@@ -285,8 +297,8 @@ const StudentPayment = () => {
               <button
                 onClick={() => setPaymentMethod("SLIP")}
                 className={`flex-1 py-3 px-4 rounded-lg border-2 flex items-center justify-center gap-2 ${
-                  paymentMethod === "SLIP" 
-                    ? "border-yellow-500 bg-yellow-50 text-yellow-700" 
+                  paymentMethod === "SLIP"
+                    ? "border-yellow-500 bg-yellow-50 text-yellow-700"
                     : "border-gray-300 hover:border-gray-400"
                 }`}
               >
@@ -318,9 +330,9 @@ const StudentPayment = () => {
               <div className="space-y-4">
                 {previewImage ? (
                   <div>
-                    <img 
-                      src={previewImage} 
-                      alt="Payment slip preview" 
+                    <img
+                      src={previewImage}
+                      alt="Payment slip preview"
                       className="h-40 mx-auto mb-4 border rounded"
                     />
                     <div className="flex gap-3">
@@ -355,14 +367,16 @@ const StudentPayment = () => {
                     <p className="mb-4">Upload your bank payment slip</p>
                     <label className="cursor-pointer bg-yellow-500 hover:bg-yellow-600 text-white py-2 px-4 rounded inline-block">
                       Select File
-                      <input 
-                        type="file" 
+                      <input
+                        type="file"
                         accept="image/*"
                         className="hidden"
                         onChange={handleFileChange}
                       />
                     </label>
-                    <p className="text-sm text-gray-500 mt-2">JPEG or PNG, max 5MB</p>
+                    <p className="text-sm text-gray-500 mt-2">
+                      JPEG or PNG, max 5MB
+                    </p>
                   </div>
                 )}
               </div>
@@ -374,16 +388,24 @@ const StudentPayment = () => {
       {/* Payment History Section */}
       <div className="bg-white rounded-lg shadow p-6">
         <h2 className="text-xl font-semibold mb-4">Payment History</h2>
-        
+
         {paymentHistory?.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Method</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Date
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Amount
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Method
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    Status
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -396,13 +418,14 @@ const StudentPayment = () => {
                       {formatCurrency(payment.amount)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap capitalize">
-                      {payment.method?.toLowerCase() || '-'}
+                      {payment.method?.toLowerCase() || "-"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-2">
                         {getPaymentStatusIcon(payment.status)}
                         <span className="capitalize">
-                          {payment.status?.toLowerCase().replace('_', ' ') || '-'}
+                          {payment.status?.toLowerCase().replace("_", " ") ||
+                            "-"}
                         </span>
                       </div>
                     </td>
