@@ -53,12 +53,7 @@ export const Sidebar = ({ mobileMenuOpen, setMobileMenuOpen }) => {
       icon: <BellIcon size={20} />,
       path: "driver/notifications",
     },
-    {
-      id: "vehicle",
-      label: "Vehicle Info",
-      icon: <TruckIcon size={20} />,
-      path: "vehicle",
-    },
+    
     {
       id: "shift",
       label: "Driver Shift",
