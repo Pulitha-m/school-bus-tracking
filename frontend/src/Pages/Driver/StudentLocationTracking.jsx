@@ -3,459 +3,370 @@ import { Loader } from "@googlemaps/js-api-loader";
 import { NavigationIcon, RouteIcon, ArrowUpRightIcon } from "lucide-react";
 import backendUrl from "../../config/config";
 
-// Function to calculate the distance between two points using the Haversine formula
+// Haversine formula
 const calculateDistance = (lat1, lng1, lat2, lng2) => {
- const R = 6371; // Earth's radius in km
- const dLat = (lat2 - lat1) * (Math.PI / 180);
- const dLng = (lng2 - lng1) * (Math.PI / 180);
- const a =
-  Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-  Math.cos(lat1 * (Math.PI / 180)) *
-   Math.cos(lat2 * (Math.PI / 180)) *
-   Math.sin(dLng / 2) *
-   Math.sin(dLng / 2);
- const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
- return R * c; // Distance in km
+  const R = 6371;
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLng = (lng2 - lng1) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1 * (Math.PI / 180)) *
+      Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLng / 2) ** 2;
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
 };
 
-// Function to reorder waypoints by calculating the nearest neighbor (optimized waypoints)
+// Optimize route
 const reorderWaypoints = (start, waypoints) => {
- let currentPoint = start;
- let remainingWaypoints = [...waypoints];
- let orderedWaypoints = [];
+  let currentPoint = start;
+  let remaining = [...waypoints];
+  const ordered = [];
 
- while (remainingWaypoints.length > 0) {
-  let closestWaypoint = null;
-  let closestDistance = Infinity;
+  while (remaining.length) {
+    let closest = null;
+    let closestDist = Infinity;
+    remaining.forEach((wp) => {
+      const dist = calculateDistance(currentPoint.lat, currentPoint.lng, wp.lat, wp.lng);
+      if (dist < closestDist) {
+        closest = wp;
+        closestDist = dist;
+      }
+    });
+    ordered.push(closest);
+    currentPoint = closest;
+    remaining = remaining.filter((wp) => wp !== closest);
+  }
 
-  remainingWaypoints.forEach((wp) => {
-   const dist = calculateDistance(
-    currentPoint.lat,
-    currentPoint.lng,
-    wp.lat,
-    wp.lng
-   );
-   if (dist < closestDistance) {
-    closestWaypoint = wp;
-    closestDistance = dist;
-   }
-  });
-
-  orderedWaypoints.push(closestWaypoint);
-  currentPoint = closestWaypoint;
-  remainingWaypoints = remainingWaypoints.filter(
-   (wp) => wp !== closestWaypoint
-  );
- }
-
- return orderedWaypoints;
+  return ordered;
 };
 
 const StudentLocationTracking = () => {
- const mapContainer = useRef(null);
- const mapRef = useRef(null);
- const routePolylineRef = useRef(null);
- const markerRef = useRef(null);
- const [routeCoordinates, setRouteCoordinates] = useState([]);
- const [routeId, setRouteId] = useState(null);
- const [isLoading, setIsLoading] = useState(false);
- const [error, setError] = useState(null);
- const [googleMapsLoaded, setGoogleMapsLoaded] = useState(false);
+  const mapContainer = useRef(null);
+  const mapRef = useRef(null);
+  const markerRef = useRef(null);
+  const routePolylineRef = useRef(null);
+  const directionsPolylineRef = useRef(null);
+  const watchIdRef = useRef(null);
+  const trafficLayerRef = useRef(null);
+  const [trafficVisible, setTrafficVisible] = useState(true);
 
- const apiKey = "AIzaSyCSBBiJ1FlfAgReJyDEgDrwiX0R0CLIGHM"; // Replace with your actual API key
 
- const initializeMap = useCallback(() => {
-  if (!mapContainer.current || !window.google?.maps) return;
+  const [routeCoordinates, setRouteCoordinates] = useState([]);
+  const [routeId, setRouteId] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [googleMapsLoaded, setGoogleMapsLoaded] = useState(false);
 
-  const map = new window.google.maps.Map(mapContainer.current, {
-   center: { lat: 6.9805, lng: 79.9296 },
-   zoom: 12,
-   mapTypeControl: false,
-   streetViewControl: false,
-  });
+  const apiKey = "AIzaSyCSBBiJ1FlfAgReJyDEgDrwiX0R0CLIGHM";
 
-  mapRef.current = map;
- }, []);
-
- useEffect(() => {
-  const loader = new Loader({
-   apiKey,
-   libraries: ["geometry"],
-  });
-
-  loader
-   .load()
-   .then(() => setGoogleMapsLoaded(true))
-   .catch(() => setError("Failed to load Google Maps"));
-
-  return () => {
-   if (markerRef.current) markerRef.current.setMap(null);
-   if (routePolylineRef.current) routePolylineRef.current.setMap(null);
-  };
- }, []);
-
- useEffect(() => {
-  if (googleMapsLoaded) {
-   initializeMap();
-  }
- }, [googleMapsLoaded, initializeMap]);
-
- useEffect(() => {
-  const sessionData = sessionStorage.getItem("user");
-  if (sessionData) {
-   const { id } = JSON.parse(sessionData);
-   fetch(`${backendUrl}/getDriverById/${id}`)
-    .then((res) => res.json())
-    .then((data) => setRouteId(data.routeId))
-    .catch(() => setError("Failed to load driver routeId"));
-  }
- }, []);
-
- const addCustomMarkers = useCallback((data, studentPickups, schools) => {
-  if (!mapRef.current) return;
-
-  new window.google.maps.Marker({
-   position: { lat: data.startLat, lng: data.startLng },
-   map: mapRef.current,
-   title: `Start: ${data.startName}`,
-   icon: {
-    path: window.google.maps.SymbolPath.CIRCLE,
-    fillColor: "green",
-    fillOpacity: 1,
-    scale: 8,
-    strokeWeight: 0,
-   },
-  });
-
-  new window.google.maps.Marker({
-   position: { lat: data.endLat, lng: data.endLng },
-   map: mapRef.current,
-   title: `End: ${data.endName}`,
-   icon: {
-    path: window.google.maps.SymbolPath.CIRCLE,
-    fillColor: "red",
-    fillOpacity: 1,
-    scale: 8,
-    strokeWeight: 0,
-   },
-  });
-
-  studentPickups.forEach((p) => {
-   new window.google.maps.Marker({
-    position: { lat: p.latitude, lng: p.longitude },
-    map: mapRef.current,
-    title: `Pickup: ${p.studentEmail}`,
-    icon: {
-     path: window.google.maps.SymbolPath.CIRCLE,
-     fillColor: "purple",
-     fillOpacity: 1,
-     scale: 8,
-     strokeWeight: 0,
-    },
-   });
-  });
-
-  schools.forEach((s) => {
-   new window.google.maps.Marker({
-    position: { lat: s.latitude, lng: s.longitude },
-    map: mapRef.current,
-    title: `School: ${s.name}`,
-    icon: {
-     path: window.google.maps.SymbolPath.CIRCLE,
-     fillColor: "blue",
-     fillOpacity: 1,
-     scale: 8,
-     strokeWeight: 0,
-    },
-   });
-  });
- }, []);
-
- 
-const startJourney = useCallback(async () => {
-  if (!mapRef.current || !routeId || !googleMapsLoaded) return;
-
-  setIsLoading(true);
-  setError(null);
-
-  try {
-    // Fetch route data
-    const res = await fetch(`${backendUrl}/getRouteById/${routeId}`);
-    const data = await res.json();
-    let studentPickups = data.studentPickups || [];
-    const schools = data.schools || [];
-
-    // Fetch today's availability list for the bus
-    const availabilityRes = await fetch(`${backendUrl}/api/availability/bus/${routeId}`);
-    const availabilityData = await availabilityRes.json();
-
-    const today = new Date().toISOString().split('T')[0];
-console.log("📅 Today:", today);
-
-const filteredPickups = [];
-
-for (const pickup of studentPickups) {
-  const pickupEmail = (pickup.studentEmail || "").trim().toLowerCase();
-  console.log("📩 Checking availability for:", pickupEmail);
-
-  try {
-    const res = await fetch(`${backendUrl}/api/availability/student/${pickupEmail}`);
-    const availabilityRecords = await res.json();
-
-    const isComing = availabilityRecords.every((avail) => {
-      const availDate = avail.date.split('T')[0];
-      const notComingToday =
-        availDate === today &&
-        (avail.coming === false || avail.coming === "false") &&
-        avail.attendanceType === "Both";
-
-      console.log("🧪 Availability check for:", {
-        email: pickupEmail,
-        availDate,
-        today,
-        coming: avail.coming,
-        attendanceType: avail.attendanceType,
-        exclude: notComingToday,
-      });
-
-      return !notComingToday;
+  const initializeMap = useCallback(() => {
+    if (!mapContainer.current || !window.google?.maps) return;
+    const map = new window.google.maps.Map(mapContainer.current, {
+      center: { lat: 6.9805, lng: 79.9296 },
+      zoom: 12,
+      mapTypeControl: false,
+      streetViewControl: false,
     });
+    mapRef.current = map;
+    trafficLayerRef.current = new window.google.maps.TrafficLayer();
+    trafficLayerRef.current.setMap(map);
 
-    if (isComing) {
-      console.log("✅ Adding pickup:", pickupEmail);
-      filteredPickups.push(pickup);
-    } else {
-      console.log("🚫 Excluding pickup (not coming today):", pickupEmail);
+  }, []);
+
+  useEffect(() => {
+    const loader = new Loader({ apiKey, libraries: ["geometry"] });
+    loader.load()
+      .then(() => setGoogleMapsLoaded(true))
+      .catch(() => setError("Failed to load Google Maps"));
+  }, []);
+
+  useEffect(() => {
+    if (googleMapsLoaded) initializeMap();
+  }, [googleMapsLoaded, initializeMap]);
+
+  useEffect(() => {
+    const sessionData = sessionStorage.getItem("user");
+    if (sessionData) {
+      const { id } = JSON.parse(sessionData);
+      fetch(`${backendUrl}/getDriverById/${id}`)
+        .then((res) => res.json())
+        .then((data) => setRouteId(data.routeId))
+        .catch(() => setError("Failed to load driver routeId"));
     }
-  } catch (err) {
-    console.error(`❌ Failed to fetch availability for ${pickupEmail}`, err);
-    // Optionally include pickup if fetch fails
-    filteredPickups.push(pickup);
-  }
-}
+  }, []);
 
-studentPickups = filteredPickups;
-
-
-    // Combine all waypoints (start, pickups, schools, end)
-    const waypoints = [
-      { lat: data.startLat, lng: data.startLng }, // Start
-      ...studentPickups.map((p) => ({ lat: p.latitude, lng: p.longitude })), // Student pickups
-      ...schools.map((s) => ({ lat: s.latitude, lng: s.longitude })), // Schools
-      { lat: data.endLat, lng: data.endLng }, // End
-    ];
-
-    // Optimize the waypoints order (excluding start and end points)
-    const optimizedWaypoints = reorderWaypoints(
-      { lat: data.startLat, lng: data.startLng },
-      waypoints.slice(1, -1)
-    );
-
-    // Build routing request
-    const requestBody = {
-      origin: {
-        location: { latLng: { latitude: data.startLat, longitude: data.startLng } },
-      },
-      destination: {
-        location: { latLng: { latitude: data.endLat, longitude: data.endLng } },
-      },
-      intermediates: optimizedWaypoints.map((wp) => ({
-        location: { latLng: { latitude: wp.lat, longitude: wp.lng } },
-      })),
-      travelMode: "DRIVE",
-      routingPreference: "TRAFFIC_AWARE_OPTIMAL",
+  useEffect(() => {
+    return () => {
+      if (watchIdRef.current) navigator.geolocation.clearWatch(watchIdRef.current);
+      if (markerRef.current) markerRef.current.setMap(null);
+      if (routePolylineRef.current) routePolylineRef.current.setMap(null);
+      if (directionsPolylineRef.current) directionsPolylineRef.current.setMap(null);
+      
     };
+  }, []);
+  
 
-    const routeResponse = await fetch(
-      `https://routes.googleapis.com/directions/v2:computeRoutes?key=${apiKey}`,
-      {
+  const addCustomMarkers = useCallback((data, studentPickups, schools) => {
+    const createMarker = (lat, lng, title, color) => {
+      return new window.google.maps.Marker({
+        position: { lat, lng },
+        map: mapRef.current,
+        title,
+        icon: {
+          path: window.google.maps.SymbolPath.CIRCLE,
+          fillColor: color,
+          fillOpacity: 1,
+          scale: 8,
+          strokeWeight: 0,
+        },
+      });
+    };
+    createMarker(data.startLat, data.startLng, `Start: ${data.startName}`, "green");
+    createMarker(data.endLat, data.endLng, `End: ${data.endName}`, "red");
+    studentPickups.forEach((p) => createMarker(p.latitude, p.longitude, `Pickup: ${p.studentEmail}`, "purple"));
+    schools.forEach((s) => createMarker(s.latitude, s.longitude, `School: ${s.name}`, "blue"));
+  }, []);
+
+  const startJourney = useCallback(async () => {
+    if (!mapRef.current || !routeId || !googleMapsLoaded) return;
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const res = await fetch(`${backendUrl}/getRouteById/${routeId}`);
+      const data = await res.json();
+      let studentPickups = data.studentPickups || [];
+      const schools = data.schools || [];
+
+      const today = new Date().toISOString().split("T")[0];
+      const filtered = [];
+
+      for (const p of studentPickups) {
+        try {
+          const res = await fetch(`${backendUrl}/api/availability/student/${p.studentEmail}`);
+          const availability = await res.json();
+          const isComing = availability.every((a) => {
+            const date = a.date?.split("T")[0];
+            return !(date === today && (a.coming === false || a.coming === "false") && a.attendanceType === "Both");
+          });
+          if (isComing) filtered.push(p);
+        } catch {
+          filtered.push(p);
+        }
+      }
+
+      const waypoints = [
+        { lat: data.startLat, lng: data.startLng },
+        ...filtered.map((p) => ({ lat: p.latitude, lng: p.longitude })),
+        ...schools.map((s) => ({ lat: s.latitude, lng: s.longitude })),
+        { lat: data.endLat, lng: data.endLng },
+      ];
+
+      const optimized = reorderWaypoints({ lat: data.startLat, lng: data.startLng }, waypoints.slice(1, -1));
+
+      const routeRequest = {
+        origin: { location: { latLng: { latitude: data.startLat, longitude: data.startLng } } },
+        destination: { location: { latLng: { latitude: data.endLat, longitude: data.endLng } } },
+        intermediates: optimized.map((wp) => ({
+          location: { latLng: { latitude: wp.lat, longitude: wp.lng } },
+        })),
+        travelMode: "DRIVE",
+        routingPreference: "TRAFFIC_AWARE_OPTIMAL",
+      };
+
+      const res2 = await fetch(`https://routes.googleapis.com/directions/v2:computeRoutes?key=${apiKey}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "X-Goog-FieldMask": "*",
         },
-        body: JSON.stringify(requestBody),
-      }
-    );
+        body: JSON.stringify(routeRequest),
+      });
 
-    if (!routeResponse.ok) {
-      const errorMessage = await routeResponse.text();
-      throw new Error(`Error fetching route data: ${routeResponse.statusText} - ${errorMessage}`);
+      const result = await res2.json();
+      const polyline = result.routes?.[0]?.polyline?.encodedPolyline;
+      if (!polyline) throw new Error("No polyline found");
+
+      const path = window.google.maps.geometry.encoding.decodePath(polyline);
+      if (routePolylineRef.current) routePolylineRef.current.setMap(null);
+
+      routePolylineRef.current = new window.google.maps.Polyline({
+        path,
+        map: mapRef.current,
+        strokeColor: "#2337C6",
+        strokeOpacity: 0.9,
+        strokeWeight: 5,
+      });
+
+      setRouteCoordinates(path.map((p) => [p.lng(), p.lat()]));
+      addCustomMarkers(data, filtered, schools);
+
+      const bounds = new window.google.maps.LatLngBounds();
+      path.forEach((p) => bounds.extend(p));
+      mapRef.current.fitBounds(bounds);
+    } catch (err) {
+      console.error(err);
+      setError(err.message);
     }
 
-    const routeData = await routeResponse.json();
+    setIsLoading(false);
+  }, [routeId, googleMapsLoaded, addCustomMarkers]);
 
-    if (!routeData.routes || routeData.routes.length === 0) {
-      throw new Error("No route found in the response.");
-    }
+  const startNavigation = useCallback(() => {
+    if (!mapRef.current || !googleMapsLoaded) return;
 
-    const polyline = routeData.routes[0]?.polyline?.encodedPolyline;
-
-    if (!polyline) {
-      throw new Error("No polyline found in the route data.");
-    }
-
-    const decodedPath = window.google.maps.geometry.encoding.decodePath(polyline);
-
-    if (routePolylineRef.current) routePolylineRef.current.setMap(null);
-
-    const routeLine = new window.google.maps.Polyline({
-      path: decodedPath,
+    if (markerRef.current) markerRef.current.setMap(null);
+    markerRef.current = new window.google.maps.Marker({
       map: mapRef.current,
-      strokeColor: "#2337C6",
-      strokeOpacity: 0.9,
-      strokeWeight: 5,
+      icon: {
+        url: "https://cdn-icons-png.flaticon.com/512/61/61205.png",
+        scaledSize: new window.google.maps.Size(40, 40),
+        anchor: new window.google.maps.Point(20, 20),
+      },
     });
 
-    routePolylineRef.current = routeLine;
-    setRouteCoordinates(decodedPath.map((latLng) => [latLng.lng(), latLng.lat()]));
+    watchIdRef.current = navigator.geolocation.watchPosition(
+      (pos) => {
+        const position = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        markerRef.current.setPosition(position);
+        mapRef.current.panTo(position);
+        mapRef.current.setZoom(17);
+        mapRef.current.setTilt(45);
+      },
+      () => setError("Unable to access your location."),
+      { enableHighAccuracy: true }
+    );
+  }, [googleMapsLoaded]);
 
-    // Add custom markers
-    addCustomMarkers(data, studentPickups, schools);
+  const navigateToStart = useCallback(() => {
+    if (!mapRef.current || !routeCoordinates.length || !googleMapsLoaded) return;
 
-    const bounds = new window.google.maps.LatLngBounds();
-    decodedPath.forEach((point) => bounds.extend(point));
-    mapRef.current.fitBounds(bounds);
+    setIsLoading(true);
+    setError(null);
 
-  } catch (err) {
-    console.error("Journey error:", err);
-    setError(err.message);
-  }
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const userLat = pos.coords.latitude;
+          const userLng = pos.coords.longitude;
+          const startLat = routeCoordinates[0][1];
+          const startLng = routeCoordinates[0][0];
 
-  setIsLoading(false);
-}, [routeId, googleMapsLoaded, addCustomMarkers]);
+          const requestBody = {
+            origin: { location: { latLng: { latitude: userLat, longitude: userLng } } },
+            destination: { location: { latLng: { latitude: startLat, longitude: startLng } } },
+            travelMode: "DRIVE",
+            routingPreference: "TRAFFIC_AWARE_OPTIMAL",
+          };
 
- const startNavigation = useCallback(() => {
-  if (!mapRef.current || !googleMapsLoaded) return;
+          const res = await fetch(`https://routes.googleapis.com/directions/v2:computeRoutes?key=${apiKey}`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-Goog-FieldMask": "*",
+            },
+            body: JSON.stringify(requestBody),
+          });
 
-  if (markerRef.current) markerRef.current.setMap(null);
+          const data = await res.json();
+          const polyline = data.routes?.[0]?.polyline?.encodedPolyline;
+          if (!polyline) throw new Error("No polyline returned");
 
-  markerRef.current = new window.google.maps.Marker({
-   map: mapRef.current,
-   icon: {
-    url: "https://cdn-icons-png.flaticon.com/512/61/61205.png",
-    scaledSize: new window.google.maps.Size(40, 40),
-    anchor: new window.google.maps.Point(20, 20),
-   },
-  });
+          const decodedPath = window.google.maps.geometry.encoding.decodePath(polyline);
+          if (directionsPolylineRef.current) directionsPolylineRef.current.setMap(null);
 
-  const watchId = navigator.geolocation.watchPosition(
-   (pos) => {
-    const position = {
-     lat: pos.coords.latitude,
-     lng: pos.coords.longitude,
-    };
-    markerRef.current.setPosition(position);
-    mapRef.current.panTo(position);
-    mapRef.current.setZoom(17);
-    mapRef.current.setTilt(45);
-   },
-   () => setError("Unable to access your location."),
-   { enableHighAccuracy: true }
-  );
+          directionsPolylineRef.current = new window.google.maps.Polyline({
+            path: decodedPath,
+            map: mapRef.current,
+            strokeColor: "#FF8800",
+            strokeOpacity: 0.9,
+            strokeWeight: 4,
+          });
 
-  return () => navigator.geolocation.clearWatch(watchId);
- }, [googleMapsLoaded]);
+          const bounds = new window.google.maps.LatLngBounds();
+          decodedPath.forEach((p) => bounds.extend(p));
+          mapRef.current.fitBounds(bounds);
+        } catch (err) {
+          console.error("❌ navigateToStart error:", err);
+          setError(err.message);
+        }
+        setIsLoading(false);
+      },
+      () => {
+        setError("Unable to access your location.");
+        setIsLoading(false);
+      },
+      { enableHighAccuracy: true }
+    );
+  }, [routeCoordinates, googleMapsLoaded]);
 
- const navigateToStart = useCallback(() => {
-  if (!mapRef.current || !routeCoordinates.length || !googleMapsLoaded)
-   return;
+  const toggleTraffic = () => {
+    if (!mapRef.current || !trafficLayerRef.current) return;
+  
+    if (trafficVisible) {
+      trafficLayerRef.current.setMap(null); // Turn off
+    } else {
+      trafficLayerRef.current.setMap(mapRef.current); // Turn on
+    }
+  
+    setTrafficVisible(!trafficVisible);
+  };
+  
 
-  setIsLoading(true);
-  setError(null);
+  return (
+    <div className="mb-6">
+      <h1 className="text-2xl font-bold text-gray-800">Student Location Tracking</h1>
+      <p className="text-gray-600 mb-4">Live tracking of the school bus route and student pickups</p>
+      {error && <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">{error}</div>}
+      <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div className="border-b border-gray-200 flex flex-wrap gap-2 p-3">
+          <button
+            onClick={startJourney}
+            disabled={isLoading || !googleMapsLoaded}
+            className={`px-4 py-2 font-medium text-sm text-white rounded flex items-center ${
+              isLoading ? "bg-blue-400" : "bg-blue-600 hover:bg-blue-700"
+            }`}
+          >
+            {isLoading ? <span className="animate-spin mr-1">↻</span> : <RouteIcon size={16} className="inline mr-1" />}
+            Start Journey
+          </button>
+          <button
+            onClick={startNavigation}
+            disabled={!routeCoordinates.length || isLoading || !googleMapsLoaded}
+            className={`px-4 py-2 font-medium text-sm text-white rounded flex items-center ${
+              !routeCoordinates.length || isLoading ? "bg-green-400" : "bg-green-600 hover:bg-green-700"
+            }`}
+          >
+            <NavigationIcon size={16} className="inline mr-1" />
+            Start Navigation
+          </button>
+          <button
+            onClick={navigateToStart}
+            disabled={isLoading || !googleMapsLoaded}
+            className={`px-4 py-2 font-medium text-sm text-white rounded flex items-center ${
+              isLoading ? "bg-purple-400" : "bg-purple-600 hover:bg-purple-700"
+            }`}
+          >
+            <ArrowUpRightIcon size={16} className="inline mr-1" />
+            Navigate to Start
+          </button>
+          <button
+    onClick={toggleTraffic}
+    className="px-4 py-2 font-medium text-sm text-white rounded flex items-center bg-gray-600 hover:bg-gray-700"
+  >
+    {trafficVisible ? "Hide Traffic" : "Show Traffic"}
+  </button>
 
-  navigator.geolocation.getCurrentPosition(
-   (pos) => {
-    const userLatLng = new window.google.maps.LatLng(
-     pos.coords.latitude,
-     pos.coords.longitude
-    );
-    const startLatLng = new window.google.maps.LatLng(
-     routeCoordinates[0][1],
-     routeCoordinates[0][0]
-    );
-
-    const bounds = new window.google.maps.LatLngBounds();
-    bounds.extend(userLatLng);
-    bounds.extend(startLatLng);
-    mapRef.current.fitBounds(bounds);
-   },
-   () => setError("Unable to access your location."),
-   { enableHighAccuracy: true }
-  );
-
-  setIsLoading(false);
- }, [routeCoordinates, googleMapsLoaded]);
-
- return (
-  <div className="mb-6">
-   <h1 className="text-2xl font-bold text-gray-800">
-    Student Location Tracking
-   </h1>
-   <p className="text-gray-600 mb-4">
-    Live tracking of the school bus route and student pickups
-   </p>
-
-   {error && (
-    <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">{error}</div>
-   )}
-
-   <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-    <div className="border-b border-gray-200 flex flex-wrap gap-2 p-3">
-     <button
-      onClick={startJourney}
-      disabled={isLoading || !googleMapsLoaded}
-      className={`px-4 py-2 font-medium text-sm text-white rounded flex items-center ${
-       isLoading ? "bg-blue-400" : "bg-blue-600 hover:bg-blue-700"
-      }`}
-     >
-      {isLoading ? (
-       <span className="animate-spin mr-1">↻</span>
-      ) : (
-       <RouteIcon size={16} className="inline mr-1" />
-      )}
-      Start Journey
-     </button>
-     <button
-      onClick={startNavigation}
-      disabled={
-       !routeCoordinates.length || isLoading || !googleMapsLoaded
-      }
-      className={`px-4 py-2 font-medium text-sm text-white rounded flex items-center ${
-       !routeCoordinates.length || isLoading
-        ? "bg-green-400"
-        : "bg-green-600 hover:bg-green-700"
-      }`}
-     >
-      <NavigationIcon size={16} className="inline mr-1" />
-      Start Navigation
-     </button>
-     <button
-      onClick={navigateToStart}
-      disabled={isLoading || !googleMapsLoaded}
-      className={`px-4 py-2 font-medium text-sm text-white rounded flex items-center ${
-       isLoading ? "bg-purple-400" : "bg-purple-600 hover:bg-purple-700"
-      }`}
-     >
-      <ArrowUpRightIcon size={16} className="inline mr-1" />
-      Navigate to Start
-     </button>
-    </div>
-    <div className="p-6">
-     <div
-      ref={mapContainer}
-      className="w-full h-[500px] rounded border shadow"
-     />
-     {!googleMapsLoaded && (
-      <div className="text-center py-4 text-gray-500">
-       Loading Google Maps...
-      </div>
-     )}
-    </div>
-   </div>
-  </div>
- );
+        </div>
+        <div className="p-6">
+          <div ref={mapContainer} className="w-full h-[500px] rounded border shadow" />
+          {!googleMapsLoaded && <div className="text-center py-4 text-gray-500">Loading Google Maps...</div>}
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default StudentLocationTracking;
-

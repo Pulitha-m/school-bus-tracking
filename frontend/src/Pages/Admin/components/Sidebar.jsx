@@ -59,6 +59,16 @@ export function Sidebar({ mobileMenuOpen, setMobileMenuOpen }) {
       icon: <CreditCardIcon size={20} />,
     },
     {
+      id: "routes",
+      name: "Route Management",
+      icon: <MapIcon size={20} />,
+    },
+    {
+      id: "expectedStd",
+      name: "Expected Students",
+      icon: <UsersIcon size={20} />,
+    },
+    {
       id: "careers",
       name: "Career Requests",
       icon: <BriefcaseIcon size={20} />,
@@ -71,21 +81,13 @@ export function Sidebar({ mobileMenuOpen, setMobileMenuOpen }) {
       name: "Inquiries",
       icon: <HelpCircleIcon size={20} />
     },
-    {
-      id: "routes",
-      name: "Route Management",
-      icon: <MapIcon size={20} />,
-    },
+    
     {
       id: "notifications",
       name: "Notification",
       icon: <BellIcon size={20} />,
     },
-    {
-      id: "expectedStd",
-      name: "Expected Students",
-      icon: <UsersIcon size={20} />,
-    },
+    
   ];
 
   const sidebarClasses = `

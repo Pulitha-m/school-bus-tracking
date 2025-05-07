@@ -50,6 +50,7 @@ import MarkAttendance from "./Pages/Student/MarkAttendance";
 import AddAttendance from "./Pages/Student/AddAttendance";
 import { ExpectedStudentsSidebar } from "./Pages/Driver/ExpectedStudentsSidebar";
 import ExpectedStdMgt from "./Pages/Admin/ExpectedStdMgt";
+import AttendanceSummary from "./Pages/Admin/AttendanceSummary";
 import StudentPayment from "./Pages/Student/StudentPayment";
 import DriverShift from "./Pages/Driver/DriverShift";
 import  ShiftManagement  from "./Pages/Admin/DriverAttendance";
@@ -101,6 +102,7 @@ export default function App() {
             <Route path="vehicles/editBus/:busId" element={<EditBus />} />
             <Route path="vehicles/viewBus/:busId" element={<ViewBus />} />
             <Route path="expectedStd" element={<ExpectedStdMgt />} />
+            <Route path="attendance-summary" element={<AttendanceSummary />} />
 
             {/* Route management */}
             <Route path="routes" element={<RouteManagement />} />

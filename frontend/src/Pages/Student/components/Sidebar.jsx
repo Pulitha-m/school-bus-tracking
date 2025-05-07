@@ -11,6 +11,7 @@ import {
   MessageSquareIcon,
   MenuIcon,
   XIcon,
+  CheckCircleIcon,
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 
@@ -57,8 +58,8 @@ const Sidebar = ({ mobileMenuOpen, setMobileMenuOpen }) => {
     },
     {
       id: "MarkAttendance",
-      label: "MarkAttendance",
-      icon: <FileTextIcon size={20} />,
+      label: "Daily Check",
+      icon: <CheckCircleIcon  size={20} />,
       path: "MarkAttendance",
     },
   ];

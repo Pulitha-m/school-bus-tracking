@@ -562,6 +562,6 @@ const ShiftManagement = () => {
       </div>
     </div>
   );
-};
 
+};
 export default ShiftManagement;
