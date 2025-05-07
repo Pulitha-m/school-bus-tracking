@@ -120,10 +120,13 @@ const CareerManagement = () => {
   );
 
   return (
-    <div className="p-6">
+    <div className="max-w-6xl mx-auto px-4 py-6">
       <ToastContainer />
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Career Management</h1>
+      <h1 className="text-2xl font-bold text-gray-800 mb-2">Career Management</h1>
+      <p className="text-gray-600 mb-6">View and manage all career applications</p>
+
+      <div className="flex justify-between items-center mb-4">
+        
         <div className="flex gap-2">
           <button
             onClick={exportToExcel}
@@ -152,128 +155,126 @@ const CareerManagement = () => {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white border p-4 rounded shadow flex items-center gap-3">
-          <UsersIcon className="w-6 h-6 text-blue-600" />
+      <div className="flex space-x-4 mb-6">
+        <div className="bg-blue-50 text-blue-600 rounded-lg p-3 flex items-center space-x-2 w-1/4">
+          <UsersIcon className="w-5 h-5" />
           <div>
-            <p className="text-gray-600 text-sm">Total Requests</p>
+            <p className="text-sm text-gray-600">Total Requests</p>
             <h3 className="text-lg font-semibold">{careers.length}</h3>
           </div>
         </div>
-        <div className="bg-white border p-4 rounded shadow flex items-center gap-3">
-          <HourglassIcon className="w-6 h-6 text-yellow-600" />
+        <div className="bg-yellow-50 text-yellow-600 rounded-lg p-3 flex items-center space-x-2 w-1/4">
+          <HourglassIcon className="w-5 h-5" />
           <div>
-            <p className="text-gray-600 text-sm">Pending</p>
+            <p className="text-sm text-gray-600">Pending</p>
             <h3 className="text-lg font-semibold">{pendingCareers.length}</h3>
           </div>
         </div>
-        <div className="bg-white border p-4 rounded shadow flex items-center gap-3">
-          <CheckCircleIcon className="w-6 h-6 text-green-600" />
+        <div className="bg-green-50 text-green-600 rounded-lg p-3 flex items-center space-x-2 w-1/4">
+          <CheckCircleIcon className="w-5 h-5" />
           <div>
-            <p className="text-gray-600 text-sm">Accepted</p>
+            <p className="text-sm text-gray-600">Accepted</p>
             <h3 className="text-lg font-semibold">{acceptedCareers.length}</h3>
           </div>
         </div>
-        <div className="bg-white border p-4 rounded shadow flex items-center gap-3">
-          <ClipboardCheckIcon className="w-6 h-6 text-purple-600" />
+        <div className="bg-purple-50 text-purple-600 rounded-lg p-3 flex items-center space-x-2 w-1/4">
+          <ClipboardCheckIcon className="w-5 h-5" />
           <div>
-            <p className="text-gray-600 text-sm">Interview Called</p>
-            <h3 className="text-lg font-semibold">
-              {interviewCalledCareers.length}
-            </h3>
+            <p className="text-sm text-gray-600">Interview Called</p>
+            <h3 className="text-lg font-semibold">{interviewCalledCareers.length}</h3>
           </div>
         </div>
       </div>
 
       {/* Applicants Table */}
-      <div className="bg-white rounded-lg shadow overflow-x-auto">
-        <table className="min-w-full text-sm text-left">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="px-6 py-3">Name</th>
-              <th className="px-6 py-3">Email</th>
-              <th className="px-6 py-3">Phone</th>
-              <th className="px-6 py-3">Status</th>
-              <th className="px-6 py-3">CV</th>
-              <th className="px-6 py-3">License</th>
-              <th className="px-6 py-3">Actions</th>
+      <div className="bg-white rounded-lg shadow-md overflow-x-auto">
+      <table className="w-full text-sm border-gray-300">
+        <thead className="bg-gray-100">
+          <tr className="border-b border-gray-300">
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Phone</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">CV</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">License</th>
+            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {careers.map((career) => (
+            <tr key={career.id} className="border-t border-gray-300 hover:bg-gray-50">
+              <td className="px-6 py-3 text-sm text-gray-800">{career.name}</td>
+              <td className="px-6 py-3 text-sm text-gray-800">{career.email}</td>
+              <td className="px-6 py-3 text-sm text-gray-800">{career.phone}</td>
+              <td className="px-6 py-3 text-sm">
+                <select
+                  value={career.status}
+                  onChange={(e) => updateStatus(career.id, e.target.value)}
+                  className="border rounded px-2 py-1"
+                >
+                  <option value="PENDING">PENDING</option>
+                  <option value="ACCEPTED">ACCEPTED</option>
+                  <option value="INTERVIEW CALLED">INTERVIEW CALLED</option>
+                </select>
+              </td>
+              <td className="px-6 py-3">
+                {career.cvImage ? (
+                  <img
+                    src={`data:image/jpeg;base64,${career.cvImage}`}
+                    alt="CV"
+                    className="w-16 h-16 object-cover rounded"
+                  />
+                ) : (
+                  "No Image"
+                )}
+              </td>
+              <td className="px-6 py-3">
+                {career.drivers_license ? (
+                  <img
+                    src={`data:image/jpeg;base64,${career.drivers_license}`}
+                    alt="License"
+                    className="w-16 h-16 object-cover rounded"
+                  />
+                ) : (
+                  "No Image"
+                )}
+              </td>
+              <td className="px-6 py-3 text-sm text-right space-x-3">
+                <button
+                  onClick={() => {
+                    setSelectedCareer(career);
+                    setShowModal(true);
+                  }}
+                  className="text-orange-500 hover:text-orange-600 flex items-center"
+                >
+                  <EyeIcon className="w-4 h-4 mr-1" /> View
+                </button>
+                <button
+                  onClick={() => handleDelete(career.id)}
+                  className="text-red-500 hover:text-red-600 flex items-center"
+                >
+                  <Trash2Icon className="w-4 h-4 mr-1" /> Delete
+                </button>
+                {career.status === "ACCEPTED" && (
+                  <button
+                    onClick={() => handleCreateAccount(career)}
+                    disabled={career.accountCreated}
+                    className={`px-2 py-1 rounded flex items-center text-white ${
+                      career.accountCreated
+                        ? "bg-gray-400 cursor-not-allowed"
+                        : "bg-blue-600 hover:bg-blue-700"
+                    }`}
+                  >
+                    <UserPlusIcon className="w-4 h-4 inline mr-1" />
+                    {career.accountCreated ? "Account Created" : "Create"}
+                  </button>
+                )}
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {careers.map((career) => (
-              <tr key={career.id} className="border-t">
-                <td className="px-6 py-4">{career.name}</td>
-                <td className="px-6 py-4">{career.email}</td>
-                <td className="px-6 py-4">{career.phone}</td>
-                <td className="px-6 py-4">
-                  <select
-                    value={career.status}
-                    onChange={(e) => updateStatus(career.id, e.target.value)}
-                    className="border rounded px-2 py-1"
-                  >
-                    <option value="PENDING">PENDING</option>
-                    <option value="ACCEPTED">ACCEPTED</option>
-                    <option value="INTERVIEW CALLED">INTERVIEW CALLED</option>
-                  </select>
-                </td>
-                <td className="px-6 py-3">
-                  {career.cvImage ? (
-                    <img
-                      src={`data:image/jpeg;base64,${career.cvImage}`}
-                      alt="CV"
-                      className="w-16 h-16 object-cover rounded"
-                    />
-                  ) : (
-                    "No Image"
-                  )}
-                </td>
-                <td className="px-6 py-3">
-                  {career.drivers_license ? (
-                    <img
-                      src={`data:image/jpeg;base64,${career.drivers_license}`}
-                      alt="License"
-                      className="w-16 h-16 object-cover rounded"
-                    />
-                  ) : (
-                    "No Image"
-                  )}
-                </td>
-                <td className="px-6 py-4 space-x-2">
-                  <button
-                    onClick={() => {
-                      setSelectedCareer(career);
-                      setShowModal(true);
-                    }}
-                    className="text-blue-600 hover:underline flex items-center"
-                  >
-                    <EyeIcon className="w-4 h-4 mr-1" /> View
-                  </button>
-                  <button
-                    onClick={() => handleDelete(career.id)}
-                    className="text-red-600 hover:underline flex items-center"
-                  >
-                    <Trash2Icon className="w-4 h-4 mr-1" /> Delete
-                  </button>
-                  {career.status === "ACCEPTED" && (
-                    <button
-                      onClick={() => handleCreateAccount(career)}
-                      disabled={career.accountCreated}
-                      className={`px-2 py-1 rounded flex items-center text-white ${
-                        career.accountCreated
-                          ? "bg-gray-400 cursor-not-allowed"
-                          : "bg-blue-600 hover:bg-blue-700"
-                      }`}
-                    >
-                      <UserPlusIcon className="w-4 h-4 inline mr-1" />
-                      {career.accountCreated ? "Account Created" : "Create"}
-                    </button>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+          ))}
+        </tbody>
+      </table>
+    </div>
 
       {/* View Modal */}
       {showModal && selectedCareer && (
