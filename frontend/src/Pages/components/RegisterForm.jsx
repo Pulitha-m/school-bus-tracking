@@ -314,6 +314,10 @@ const MultiStepRegisterForm = () => {
         toast.error("Password must be at least 6 characters");
         return;
       }
+      if (formData.password.length > 8) {
+        toast.error("Password must not exceed 8 characters");
+        return;
+      }
     }
 
     if (step === 2) {
@@ -479,9 +483,14 @@ const MultiStepRegisterForm = () => {
                 name="password"
                 type={showPassword ? "text" : "password"}
                 value={formData.password}
-                onChange={handleChange}
+                onChange={(e) => {
+                  if (e.target.value.length <= 8) {
+                    handleChange(e);
+                  }
+                }}
                 required
                 minLength={6}
+                maxLength={8}
               />
               <button
                 type="button"
@@ -503,6 +512,7 @@ const MultiStepRegisterForm = () => {
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 required
+                maxLength={8}
               />
               <button
                 type="button"

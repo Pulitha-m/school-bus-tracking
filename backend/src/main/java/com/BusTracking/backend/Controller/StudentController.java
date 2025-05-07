@@ -113,6 +113,23 @@ public class StudentController {
 
     }
 
+
+    // Add this method to StudentController
+
+    @GetMapping("/getStudent")
+    public ResponseEntity<Student> getStudent() {
+        try {
+            // Directly fetch the student details (you can add other identifiers if needed)
+            Student student = studentService.getStudentByUserUsername("someEmailOrIdentifier")
+                    .orElseThrow(() -> new RuntimeException("Student not found"));
+
+            return ResponseEntity.ok(student);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build(); // Return 404 if student not found
+        }
     }
+
+
+}
 
 

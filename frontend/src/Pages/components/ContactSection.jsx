@@ -10,20 +10,36 @@ export const ContactSection = () => {
     message: "",
   });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setTimeout(() => {
-      setIsSubmitted(true);
-      setTimeout(() => {
-        setIsSubmitted(false);
-        setFormData({
-          name: "",
-          email: "",
-          subject: "",
-          message: "",
-        });
-      }, 3000);
-    }, 500);
+
+    try {
+      const response = await fetch("http://localhost:8080/api/inquiry", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (response.ok) {
+        setIsSubmitted(true);
+        setTimeout(() => {
+          setIsSubmitted(false);
+          setFormData({
+            name: "",
+            email: "",
+            subject: "",
+            message: "",
+            mobile: "",
+          });
+        }, 3000);
+      } else {
+        console.error("Failed to send inquiry");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+    }
   };
 
   const handleChange = (e) => {

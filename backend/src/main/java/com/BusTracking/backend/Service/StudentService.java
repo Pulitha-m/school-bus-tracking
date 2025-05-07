@@ -145,36 +145,54 @@ public class StudentService {
 
     @Transactional
     public Student updateStudent(Long id, Student studentUpdates) {
-        Student existingStudent = studentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Student not found"));
+Student existingStudent = studentRepository.findById(id)
+.orElseThrow(() -> new RuntimeException("Student not found"));
 
-        // Update student fields
-        if (studentUpdates.getFirstName() != null) {
-            existingStudent.setFirstName(studentUpdates.getFirstName());
-        }
-        if (studentUpdates.getLastName() != null) {
-            existingStudent.setLastName(studentUpdates.getLastName());
-        }
-        // Update other fields as needed...
+if (studentUpdates.getFirstName() != null) {
+existingStudent.setFirstName(studentUpdates.getFirstName());
+}
+if (studentUpdates.getLastName() != null) {
+existingStudent.setLastName(studentUpdates.getLastName());
+}
+if (studentUpdates.getStartLocation() != null) {
+existingStudent.setStartLocation(studentUpdates.getStartLocation());
+}
+if (studentUpdates.getEndLocation() != null) {
+existingStudent.setEndLocation(studentUpdates.getEndLocation());
+}
+if (studentUpdates.getEmergencyName() != null) {
+existingStudent.setEmergencyName(studentUpdates.getEmergencyName());
+}
+if (studentUpdates.getEmergencyPhone() != null) {
+existingStudent.setEmergencyPhone(studentUpdates.getEmergencyPhone());
+}
+if (studentUpdates.getEmergencyRelation() != null) {
+existingStudent.setEmergencyRelation(studentUpdates.getEmergencyRelation());
+}
+if (studentUpdates.getAllergies() != null) {
+existingStudent.setAllergies(studentUpdates.getAllergies());
+}
+if (studentUpdates.getMedicalNotes() != null) {
+existingStudent.setMedicalNotes(studentUpdates.getMedicalNotes());
+}
 
-        // Handle User updates if provided (including password encoding)
-        if (studentUpdates.getUser() != null) {
-            User existingUser = existingStudent.getUser();
-            User updatedUser = studentUpdates.getUser();
+// Update user fields if needed
+if (studentUpdates.getUser() != null) {
+User existingUser = existingStudent.getUser();
+User updatedUser = studentUpdates.getUser();
 
-            if (updatedUser.getPassword() != null) {
+if (updatedUser.getPassword() != null) {
+BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+existingUser.setPassword(passwordEncoder.encode(updatedUser.getPassword()));
+}
+if (updatedUser.getUsername() != null) {
+existingUser.setUsername(updatedUser.getUsername());
+}
+}
 
-                BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-                String encodedPassword = passwordEncoder.encode(updatedUser.getPassword());
-                existingUser.setPassword(encodedPassword);
-            }
-            if (updatedUser.getUsername() != null) {
-                existingUser.setUsername(updatedUser.getUsername());
-            }
-        }
-
-        return studentRepository.save(existingStudent);
+return studentRepository.save(existingStudent);
     }
+
 
     @Transactional
     public String deleteStudent(Long id) {
