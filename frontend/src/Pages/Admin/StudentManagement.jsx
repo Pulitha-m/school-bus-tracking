@@ -98,7 +98,7 @@ export default function StudentManagement() {
 
       {!loading && !error && filteredStudents.length > 0 && (
         <div className="overflow-x-auto shadow-md rounded-lg">
-          <table className="min-w-full bg-white border border-gray-200 rounded-lg">
+          <table className="min-w-full bg-white border border-gray-100 rounded-lg">
             <thead className="bg-gray-100 text-gray-700 text-left">
               <tr>
                 <th className="py-3 px-4 border-b">Student ID</th>
@@ -107,6 +107,7 @@ export default function StudentManagement() {
                 <th className="py-3 px-4 border-b">DOB</th>
                 <th className="py-3 px-4 border-b">Route ID</th>
                 <th className="py-3 px-4 border-b">Bus ID</th>
+                <th className="py-3 px-4 border-b">Bus Plate</th>
                 <th className="py-3 px-4 border-b text-right">Action</th>
               </tr>
             </thead>
@@ -116,21 +117,30 @@ export default function StudentManagement() {
                   key={student.id}
                   className="hover:bg-blue-50 transition-colors"
                 >
-                  <td className="py-3 px-4 border-b">{student.id}</td>
-                  <td className="py-3 px-4 border-b">
+                  <td className="py-3 px-4 border-b border-gray-300">
+                    {student.id}
+                  </td>
+                  <td className="py-3 px-4 border-b border-gray-300">
                     {student.firstName} {student.lastName}
                   </td>
-                  <td className="py-3 px-4 border-b">
+                  <td className="py-3 px-4 border-b border-gray-300">
                     {student.user?.username || "N/A"}
                   </td>
-                  <td className="py-3 px-4 border-b">{student.dob || "N/A"}</td>
-                  <td className="py-3 px-4 border-b">
+                  <td className="py-3 px-4 border-b border-gray-300">
+                    {student.dob || "N/A"}
+                  </td>
+                  <td className="py-3 px-4 border-b border-gray-300">
                     {student.routeId || "N/A"}
                   </td>
-                  <td className="py-3 px-4 border-b">
+                  <td className="py-3 px-4 border-b border-gray-300">
                     {student.busId || "N/A"}
                   </td>
-                  <td className="py-3 px-4 border-b text-right space-x-2">
+
+                  <td className="py-3 px-4 border-b border-gray-300">
+                    {student.noPlate || "N/A"}
+                  </td>
+
+                  <td className="py-3 px-4 border-b text-right space-x-2 border-gray-300">
                     <button
                       onClick={() => setSelectedStudent(student)}
                       className="inline-flex items-center gap-1 px-3 py-1.5 bg-yellow-400 text-white text-sm rounded-md hover:bg-yellow-500 transition duration-200"
@@ -185,6 +195,10 @@ export default function StudentManagement() {
               </p>
               <p>
                 <strong>Bus ID:</strong> {selectedStudent.busId || "N/A"}
+              </p>
+
+              <p>
+                <strong>Bus Plate:</strong> {selectedStudent.noPlate || "N/A"}
               </p>
             </div>
           </div>

@@ -26,6 +26,7 @@ import EditRoute from "./Pages/Admin/Route/EditRoute";
 import CareerManagement from "./Pages/Admin/CareerManagement";
 import DriverManagement from "./Pages/Admin/DriverManagement";
 import StudentManagement from "./Pages/Admin/StudentManagement";
+import Inquiry from "./Pages/Admin/Inquiry";
 import DriverDashboard from "./Pages/Driver/DriverDashboard";
 import DriverLayout from "./Pages/Driver/components/DriverLayout";
 import DriverProfile from "./Pages/Driver/DriverProfile";
@@ -100,6 +101,7 @@ export default function App() {
             <Route path="attendance" element={<AttendanceManagement />} />
             <Route path="students" element={<StudentManagement />} />
             <Route path="feedback" element={<AdminFeedback />} />
+            <Route path="inquiries" element={<Inquiry />} />
 
             {/* Vehicle management */}
             <Route path="vehicles" element={<VehicleManagement />} />
