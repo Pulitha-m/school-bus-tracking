@@ -28,12 +28,7 @@ export const Sidebar = ({ mobileMenuOpen, setMobileMenuOpen }) => {
       icon: <UserIcon size={20} />,
       path: "driver/profile",
     },
-    {
-      id: "students",
-      label: "Student Management",
-      icon: <UsersIcon size={20} />,
-      path: "driver/students",
-    },
+
     {
       id: "location",
       label: "Location Tracking",
@@ -50,7 +45,7 @@ export const Sidebar = ({ mobileMenuOpen, setMobileMenuOpen }) => {
       id: "payments",
       label: "Payments",
       icon: <BanknoteIcon size={20} />,
-      path: "payments",
+      path: "driver/payments",
     },
     {
       id: "notifications",

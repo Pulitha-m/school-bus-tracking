@@ -84,6 +84,32 @@ const ShareLocation = () => {
     }
   };
 
+  const sendNotification = async () => {
+    try {
+      const sessionData = sessionStorage.getItem("user");
+      if (!sessionData) return;
+
+      const { username } = JSON.parse(sessionData);
+
+      const notification = {
+        busId,
+        driverUsername: username,
+        title: "Location Sharing Started",
+        level: "INFO",
+        message: `Driver ${username} started sharing live location.`,
+      };
+
+      await axios.post(`${backendUrl}/api/notifications`, notification, {
+        withCredentials: true,
+      });
+
+      toast.success("Notification sent to subscribers");
+    } catch (err) {
+      console.error("Notification send error", err);
+      toast.error("Failed to send notification");
+    }
+  };
+
   return (
     <div className="p-6">
       <ToastContainer position="bottom-right" autoClose={3000} />
@@ -129,6 +155,7 @@ const ShareLocation = () => {
               onClick={() => {
                 setIsSharing(!isSharing);
                 if (!isSharing) {
+                  sendNotification();
                   toast.info("Location sharing started");
                 } else {
                   toast.info("Location sharing stopped");

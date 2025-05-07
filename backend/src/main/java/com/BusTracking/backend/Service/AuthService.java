@@ -72,14 +72,15 @@ public class AuthService {
             System.out.println("Checking payment status for student: " + user.getUsername());
 
             // Find payment by student email (since your Payment model uses studentEmail)
-            Optional<Payment> payment = paymentRepo.findByStudentEmail(existingUser.getUsername());
+            // Find the most recent payment by student email
+            Optional<Payment> latestPayment = paymentRepo.findFirstByStudentEmailOrderByPaymentDateDesc(existingUser.getUsername());
 
-            if (payment.isEmpty()) {
+            if (latestPayment.isEmpty()) {
                 System.out.println("No payment record found for student: " + user.getUsername());
                 throw new RuntimeException("Payment record not found. Please complete payment to login.");
             }
 
-            Payment studentPayment = payment.get();
+            Payment studentPayment = latestPayment.get();
             if (!"PAID".equals(studentPayment.getStatus()) &&
                     !"APPROVED".equals(studentPayment.getStatus())) {
                 System.out.println("Payment not completed for student: " + user.getUsername() +
@@ -88,7 +89,6 @@ public class AuthService {
                         studentPayment.getStatus() + ". Please complete payment to login.");
             }
 
-            // Optional: Check if payment is still valid (not expired)
             if (studentPayment.getNextDueDate() != null &&
                     studentPayment.getNextDueDate().isBefore(LocalDate.now())) {
                 System.out.println("Payment expired for student: " + user.getUsername());
@@ -97,6 +97,7 @@ public class AuthService {
 
             System.out.println("Payment verified for student: " + user.getUsername() +
                     " Status: " + studentPayment.getStatus());
+
         }
 
         // Store user in session

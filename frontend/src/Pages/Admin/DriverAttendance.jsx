@@ -11,10 +11,10 @@ import {
   ChevronRightIcon,
   DownloadIcon,
   FilterIcon,
-} from 'lucide-react';
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
-import backendUrl from '../../config/config';
+} from "lucide-react";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
+import backendUrl from "../../config/config";
 
 const ShiftManagement = () => {
   const [shifts, setShifts] = useState([]);
@@ -22,14 +22,14 @@ const ShiftManagement = () => {
   const [error, setError] = useState(null);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [filters, setFilters] = useState({
-    startDate: '',
-    endDate: '',
-    driverId: '',
-    status: 'all', // 'all', 'late', 'on-time'
-    minDuration: '',
-    maxDuration: '',
+    startDate: "",
+    endDate: "",
+    driverId: "",
+    status: "all", // 'all', 'late', 'on-time'
+    minDuration: "",
+    maxDuration: "",
   });
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Fetch shifts based on filters
   useEffect(() => {
@@ -38,20 +38,26 @@ const ShiftManagement = () => {
         setLoading(true);
         setError(null);
         const queryParams = new URLSearchParams();
-        if (filters.startDate) queryParams.append('startDate', filters.startDate);
-        if (filters.endDate) queryParams.append('endDate', filters.endDate);
-        if (filters.driverId) queryParams.append('driverId', filters.driverId);
-        if (filters.status !== 'all') queryParams.append('status', filters.status);
-        if (filters.minDuration) queryParams.append('minDuration', filters.minDuration);
-        if (filters.maxDuration) queryParams.append('maxDuration', filters.maxDuration);
+        if (filters.startDate)
+          queryParams.append("startDate", filters.startDate);
+        if (filters.endDate) queryParams.append("endDate", filters.endDate);
+        if (filters.driverId) queryParams.append("driverId", filters.driverId);
+        if (filters.status !== "all")
+          queryParams.append("status", filters.status);
+        if (filters.minDuration)
+          queryParams.append("minDuration", filters.minDuration);
+        if (filters.maxDuration)
+          queryParams.append("maxDuration", filters.maxDuration);
 
-        const response = await fetch(`${backendUrl}/api/shifts/getAll?${queryParams.toString()}`);
-        if (!response.ok) throw new Error('Failed to fetch shifts');
+        const response = await fetch(
+          `${backendUrl}/api/shifts/getAll?${queryParams.toString()}`
+        );
+        if (!response.ok) throw new Error("Failed to fetch shifts");
         const data = await response.json();
         setShifts(Array.isArray(data) ? data : []);
       } catch (err) {
-        console.error('Error fetching shifts:', err);
-        setError('Failed to load shift data. Please try again.');
+        console.error("Error fetching shifts:", err);
+        setError("Failed to load shift data. Please try again.");
       } finally {
         setLoading(false);
       }
@@ -69,20 +75,24 @@ const ShiftManagement = () => {
 
   // Convert ISO 8601 duration to readable format (HH:mm:ss)
   const formatDuration = (durationStr) => {
-    if (!durationStr) return '-';
-    const match = durationStr.match(/PT(?:(\d+\.?\d*)H)?(?:(\d+\.?\d*)M)?(?:(\d+\.?\d*)S)?/);
-    if (!match) return '-';
+    if (!durationStr) return "-";
+    const match = durationStr.match(
+      /PT(?:(\d+\.?\d*)H)?(?:(\d+\.?\d*)M)?(?:(\d+\.?\d*)S)?/
+    );
+    if (!match) return "-";
     const hours = parseFloat(match[1]) || 0;
     const minutes = parseFloat(match[2]) || 0;
     const seconds = parseFloat(match[3]) || 0;
     const totalSeconds = hours * 3600 + minutes * 60 + seconds;
-return new Date(totalSeconds * 1000).toISOString().substr(11, 8);
+    return new Date(totalSeconds * 1000).toISOString().substr(11, 8);
   };
 
   // Parse duration to total hours for filtering
   const parseDurationToHours = (durationStr) => {
     if (!durationStr) return 0;
-    const match = durationStr.match(/PT(?:(\d+\.?\d*)H)?(?:(\d+\.?\d*)M)?(?:(\d+\.?\d*)S)?/);
+    const match = durationStr.match(
+      /PT(?:(\d+\.?\d*)H)?(?:(\d+\.?\d*)M)?(?:(\d+\.?\d*)S)?/
+    );
     if (!match) return 0;
     const hours = parseFloat(match[1]) || 0;
     const minutes = parseFloat(match[2]) || 0;
@@ -102,11 +112,14 @@ return new Date(totalSeconds * 1000).toISOString().substr(11, 8);
   const totalShifts = filteredShifts.length;
   const lateShifts = filteredShifts.filter((shift) => shift.isLate).length;
   const onTimeShifts = totalShifts - lateShifts;
-  const avgDuration = filteredShifts.reduce((acc, shift) => {
-    const hours = parseDurationToHours(shift.totalWorkedTime);
-    return acc + hours;
-  }, 0) / totalShifts;
-  const formattedAvgDuration = isNaN(avgDuration) ? '-' : `${Math.floor(avgDuration)}h ${Math.round((avgDuration % 1) * 60)}m`;
+  const avgDuration =
+    filteredShifts.reduce((acc, shift) => {
+      const hours = parseDurationToHours(shift.totalWorkedTime);
+      return acc + hours;
+    }, 0) / totalShifts;
+  const formattedAvgDuration = isNaN(avgDuration)
+    ? "-"
+    : `${Math.floor(avgDuration)}h ${Math.round((avgDuration % 1) * 60)}m`;
 
   // Handle filter changes
   const handleFilterChange = (e) => {
@@ -117,14 +130,14 @@ return new Date(totalSeconds * 1000).toISOString().substr(11, 8);
   // Reset filters
   const resetFilters = () => {
     setFilters({
-      startDate: '',
-      endDate: '',
-      driverId: '',
-      status: 'all',
-      minDuration: '',
-      maxDuration: '',
+      startDate: "",
+      endDate: "",
+      driverId: "",
+      status: "all",
+      minDuration: "",
+      maxDuration: "",
     });
-    setSearchQuery('');
+    setSearchQuery("");
   };
 
   // Navigation for date
@@ -141,11 +154,11 @@ return new Date(totalSeconds * 1000).toISOString().substr(11, 8);
   };
 
   const formatDate = (date) => {
-    return date.toLocaleDateString('en-US', {
-      weekday: 'long',
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric',
+    return date.toLocaleDateString("en-US", {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+      year: "numeric",
     });
   };
 
@@ -159,24 +172,40 @@ return new Date(totalSeconds * 1000).toISOString().substr(11, 8);
     doc.text("Driver Shift Report", 105, 15, { align: "center" });
 
     doc.setFontSize(12);
-    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 105, 22, { align: 'center' });
-    doc.text(`Date: ${formatDate(currentDate)}`, 105, 28, { align: 'center' });
+    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 105, 22, {
+      align: "center",
+    });
+    doc.text(`Date: ${formatDate(currentDate)}`, 105, 28, { align: "center" });
 
     // Display applied filters
     const appliedFilters = Object.entries(filters)
-      .filter(([_, value]) => value && value !== 'all')
+      .filter(([_, value]) => value && value !== "all")
       .map(([key, value]) => `${key}: ${value}`)
-      .join(', ');
-    doc.text(`Filters Applied: ${appliedFilters || 'None'}`, 105, 34, { align: 'center' });
+      .join(", ");
+    doc.text(`Filters Applied: ${appliedFilters || "None"}`, 105, 34, {
+      align: "center",
+    });
 
     // Summary metrics
     doc.setFontSize(14);
-    doc.text('Summary Statistics', 14, 46);
+    doc.text("Summary Statistics", 14, 46);
 
     doc.setFontSize(12);
     doc.text(`Total Shifts: ${totalShifts}`, 14, 54);
-    doc.text(`On Time Shifts: ${onTimeShifts} (${totalShifts > 0 ? Math.round((onTimeShifts / totalShifts) * 100) : 0}%)`, 14, 62);
-    doc.text(`Late Shifts: ${lateShifts} (${totalShifts > 0 ? Math.round((lateShifts / totalShifts) * 100) : 0}%)`, 14, 70);
+    doc.text(
+      `On Time Shifts: ${onTimeShifts} (${
+        totalShifts > 0 ? Math.round((onTimeShifts / totalShifts) * 100) : 0
+      }%)`,
+      14,
+      62
+    );
+    doc.text(
+      `Late Shifts: ${lateShifts} (${
+        totalShifts > 0 ? Math.round((lateShifts / totalShifts) * 100) : 0
+      }%)`,
+      14,
+      70
+    );
     doc.text(`Average Shift Duration: ${formattedAvgDuration}`, 14, 78);
 
     // Table data preparation
@@ -186,7 +215,7 @@ return new Date(totalSeconds * 1000).toISOString().substr(11, 8);
       formatTime(shift.shiftStart),
       formatTime(shift.shiftEnd),
       formatDuration(shift.totalWorkedTime),
-      shift.isLate ? 'Late' : 'On Time',
+      shift.isLate ? "Late" : "On Time",
     ]);
 
     // Add the table using autoTable
@@ -196,11 +225,11 @@ return new Date(totalSeconds * 1000).toISOString().substr(11, 8);
       ],
       body: tableData,
       startY: 86,
-      theme: 'grid',
+      theme: "grid",
       headStyles: {
         fillColor: [245, 158, 11], // yellow-500
         textColor: [255, 255, 255],
-        fontStyle: 'bold',
+        fontStyle: "bold",
       },
       alternateRowStyles: {
         fillColor: [249, 250, 251], // gray-50
@@ -225,10 +254,10 @@ return new Date(totalSeconds * 1000).toISOString().substr(11, 8);
       );
     }
 
-    doc.save(`driver-shift-report-${currentDate.toISOString().slice(0, 10)}.pdf`);
+    doc.save(
+      `driver-shift-report-${currentDate.toISOString().slice(0, 10)}.pdf`
+    );
   };
-};
-export default ShiftManagement;
 
   if (loading) {
     return <div className="p-6">Loading shifts...</div>;
@@ -261,14 +290,22 @@ export default ShiftManagement;
 
       {/* Date Navigation */}
       <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6 flex items-center justify-between">
-        <button onClick={prevDay} className="p-2 hover:bg-gray-100 rounded-full">
+        <button
+          onClick={prevDay}
+          className="p-2 hover:bg-gray-100 rounded-full"
+        >
           <ChevronLeftIcon size={24} />
         </button>
         <div className="flex items-center gap-2">
           <CalendarIcon size={20} className="text-yellow-500" />
-          <span className="text-lg font-semibold">{formatDate(currentDate)}</span>
+          <span className="text-lg font-semibold">
+            {formatDate(currentDate)}
+          </span>
         </div>
-        <button onClick={nextDay} className="p-2 hover:bg-gray-100 rounded-full">
+        <button
+          onClick={nextDay}
+          className="p-2 hover:bg-gray-100 rounded-full"
+        >
           <ChevronRightIcon size={24} />
         </button>
       </div>
@@ -281,7 +318,9 @@ export default ShiftManagement;
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Start Date</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Start Date
+            </label>
             <input
               type="date"
               name="startDate"
@@ -291,7 +330,9 @@ export default ShiftManagement;
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">End Date</label>
+            <label className="block text-sm font-medium text-gray-700">
+              End Date
+            </label>
             <input
               type="date"
               name="endDate"
@@ -301,7 +342,9 @@ export default ShiftManagement;
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Driver ID</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Driver ID
+            </label>
             <input
               type="text"
               name="driverId"
@@ -312,7 +355,9 @@ export default ShiftManagement;
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Status</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Status
+            </label>
             <select
               name="status"
               value={filters.status}
@@ -325,7 +370,9 @@ export default ShiftManagement;
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Min Duration (hours)</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Min Duration (hours)
+            </label>
             <input
               type="number"
               name="minDuration"
@@ -336,7 +383,9 @@ export default ShiftManagement;
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Max Duration (hours)</label>
+            <label className="block text-sm font-medium text-gray-700">
+              Max Duration (hours)
+            </label>
             <input
               type="number"
               name="maxDuration"
@@ -400,11 +449,20 @@ export default ShiftManagement;
                   <div className="w-full bg-gray-200 rounded-full h-2.5">
                     <div
                       className="bg-green-500 h-2.5 rounded-full"
-                      style={{ width: `${totalShifts > 0 ? (onTimeShifts / totalShifts) * 100 : 0}%` }}
+                      style={{
+                        width: `${
+                          totalShifts > 0
+                            ? (onTimeShifts / totalShifts) * 100
+                            : 0
+                        }%`,
+                      }}
                     ></div>
                   </div>
                   <span className="text-sm font-medium">
-                    {totalShifts > 0 ? Math.round((onTimeShifts / totalShifts) * 100) : 0}%
+                    {totalShifts > 0
+                      ? Math.round((onTimeShifts / totalShifts) * 100)
+                      : 0}
+                    %
                   </span>
                 </div>
                 <div className="flex justify-between mt-2 text-xs text-gray-500">
@@ -424,10 +482,14 @@ export default ShiftManagement;
             <ClockIcon size={20} className="text-yellow-500" />
             <h3 className="text-lg font-semibold">Shift Records</h3>
           </div>
-          <button className="text-sm text-blue-600 hover:text-blue-800">View All</button>
+          <button className="text-sm text-blue-600 hover:text-blue-800">
+            View All
+          </button>
         </div>
         {filteredShifts.length === 0 ? (
-          <p className="text-sm text-gray-500">No shifts found for the selected criteria.</p>
+          <p className="text-sm text-gray-500">
+            No shifts found for the selected criteria.
+          </p>
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">

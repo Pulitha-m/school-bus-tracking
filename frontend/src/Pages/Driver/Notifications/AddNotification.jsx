@@ -7,7 +7,8 @@ import backendUrl from "../../../config/config"; // adjust if needed
 
 export default function AddNotification() {
   const [busId, setBusId] = useState("");
-  const [driverUsername, setDriverUsername] = useState("@");
+  const [driverUsername, setDriverUsername] = useState("");
+
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
   const [level, setLevel] = useState("INFO");
@@ -40,11 +41,14 @@ export default function AddNotification() {
 
   const handleDriverUsernameChange = (e) => {
     let input = e.target.value;
-    if (!input.startsWith("@")) {
-      input = "@" + input;
-    }
-    const cleaned = "@" + input.slice(1).replace(/[^A-Za-z]/g, "");
-    setDriverUsername(cleaned);
+
+    // Allow only letters and spaces
+    input = input.replace(/[^A-Za-z\s]/g, "");
+
+    // Remove extra spaces (e.g., double or trailing spaces)
+    input = input.replace(/\s+/g, " ").trimStart();
+
+    setDriverUsername(input);
     setErrors((prev) => ({ ...prev, driverUsername: "" }));
   };
 
@@ -64,8 +68,9 @@ export default function AddNotification() {
     e.preventDefault();
 
     const newErrors = {};
-    if (!driverUsername || driverUsername.trim() === "@")
+    if (!driverUsername || driverUsername.trim() === "")
       newErrors.driverUsername = "Driver Username is required";
+
     if (!title) newErrors.title = "Title is required";
     if (!message) newErrors.message = "Message is required";
     if (!busId) newErrors.busId = "Bus ID is missing";
