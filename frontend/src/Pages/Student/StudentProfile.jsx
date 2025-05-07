@@ -237,15 +237,15 @@ export function StudentProfile() {
               </h3>
               <div className="space-y-3">
                 {[
-                  {
-                    label: "First Name",
+                  { 
+                    label: "First Name", 
                     name: "firstName",
-                    onChange: handleNameChange,
+                    onChange: handleNameChange
                   },
-                  {
-                    label: "Last Name",
+                  { 
+                    label: "Last Name", 
                     name: "lastName",
-                    onChange: handleNameChange,
+                    onChange: handleNameChange
                   },
                   {
                     label: "Email",
@@ -253,10 +253,10 @@ export function StudentProfile() {
                     value: formattedStudent.email,
                     editable: false,
                   },
-                  {
-                    label: "Phone",
+                  { 
+                    label: "Phone", 
                     name: "emergencyPhone",
-                    onChange: handlePhoneChange,
+                    onChange: handlePhoneChange
                   },
                   {
                     label: "Address",
