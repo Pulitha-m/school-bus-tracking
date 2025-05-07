@@ -54,10 +54,14 @@ import AttendanceSummary from "./Pages/Admin/AttendanceSummary";
 import StudentPayment from "./Pages/Student/StudentPayment";
 import DriverShift from "./Pages/Driver/DriverShift";
 import  ShiftManagement  from "./Pages/Admin/DriverAttendance";
+import AdminFeedback from "./Pages/Admin/AdminFeedback";
 import DriverPayment from "./Pages/Driver/DriverPayment";
 
 
 // changes
+import Feedback from "./Pages/Student/StudentFeedback";
+import FeedbackForm from "./Pages/Student/Feedback/AddFeedback";
+import EditFeedback from "./Pages/Student/Feedback/EditFeedback";
 import Feedback from "./Pages/Student/StudentFeedback";
 import DriverPayment from "./Pages/Driver/DriverPayment";
 
@@ -95,6 +99,7 @@ export default function App() {
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="attendance" element={<AttendanceManagement />} />
             <Route path="students" element={<StudentManagement />} />
+            <Route path="feedback" element={<AdminFeedback />} />
 
             {/* Vehicle management */}
             <Route path="vehicles" element={<VehicleManagement />} />
@@ -185,8 +190,14 @@ export default function App() {
 
           <Route path="add-attendance" element={<AddAttendance />} />
 
+            <Route path="feedback" element={<Feedback />} />
+            <Route path="add-feedback" element={<FeedbackForm />} />
+            <Route path="feedback/edit/:feedbackId" element={<EditFeedback />} />
+
+
+
+
           <Route path="payments" element={<StudentPayment />} />
-          <Route path="feedback" element={<Feedback />} />
           {/*<Route path="feedback" element={<FeedbackSection />} />
           <Route path="notes" element={<DriverNotes />} /> */}
         </Route>

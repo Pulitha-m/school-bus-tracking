@@ -1,7 +1,9 @@
 package com.BusTracking.backend.Service;
 
 import com.BusTracking.backend.Model.Shift;
+import com.BusTracking.backend.Model.User;
 import com.BusTracking.backend.Repository.ShiftRepo;
+import com.BusTracking.backend.Repository.UserRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -14,11 +16,16 @@ public class ShiftService {
     @Autowired
     private ShiftRepo shiftRepository;
 
+    @Autowired
+    private UserRepo userRepo;
+
     private static final LocalTime EXPECTED_SHIFT_START = LocalTime.of(7, 0); // 7:00 AM
 
     public Shift startShift(Long driverId) {
         LocalDate today = LocalDate.now();
         LocalTime now = LocalTime.now();
+
+        Optional<User> user = userRepo.findById(driverId);
 
         Shift shift = shiftRepository.findByDriverIdAndDate(driverId, today)
                 .orElse(new Shift());
@@ -26,6 +33,7 @@ public class ShiftService {
         shift.setDriverId(driverId);
         shift.setDate(today);
         shift.setShiftStart(now);
+        shift.setUsername(user.get().getUsername());
         shift.setIsLate(now.isAfter(EXPECTED_SHIFT_START));
 
         return shiftRepository.save(shift);

@@ -37,4 +37,15 @@ public class FeedbackService {
     public void deleteFeedback(Long id) {
         feedbackRepository.deleteById(id);
     }
+
+    // New method to get all feedbacks
+    public List<Feedback> getAllFeedbacks() {
+        return feedbackRepository.findAll();
+    }
+
+    public List<Feedback> getLatestFeedbacks() {
+        return feedbackRepository.findTop3ByOrderBySubmittedAtDesc();
+    }
+
+
 }

@@ -156,6 +156,26 @@ const AddRoute = () => {
     setIsRouteDrawn(false);
   };
 
+  const handleRouteNameChange = (e) => {
+    const sanitizedValue = e.target.value.replace(/[^A-Za-z\s]/g, "");
+    setRouteName(sanitizedValue);
+  };
+
+  const handleStartNameChange = (e) => {
+    const sanitizedValue = e.target.value.replace(/[^A-Za-z\s]/g, "");
+    setStartName(sanitizedValue);
+  };
+
+  const handleSchoolNameChange = (e) => {
+    const sanitizedValue = e.target.value.replace(/[^A-Za-z\s]/g, "");
+    setSchoolName(sanitizedValue);
+  };
+
+  const handleEndNameChange = (e) => {
+    const sanitizedValue = e.target.value.replace(/[^A-Za-z\s]/g, "");
+    setEndName(sanitizedValue);
+  };
+
   const handleSaveRoute = async () => {
     if (!routeName || !startLocation || !endLocation || !busId) {
       toast.error("Fill route name, select bus, start and end points.");
@@ -201,7 +221,7 @@ const AddRoute = () => {
           type="text"
           placeholder="Route Name"
           value={routeName}
-          onChange={(e) => setRouteName(e.target.value)}
+          onChange={handleRouteNameChange}
           className="w-full px-4 py-2 border border-gray-300 rounded-lg mb-4"
         />
 
@@ -247,21 +267,21 @@ const AddRoute = () => {
             type="text"
             placeholder="Start Name"
             value={startName}
-            onChange={(e) => setStartName(e.target.value)}
+            onChange={handleStartNameChange}
             className="px-4 py-2 border rounded-lg"
           />
           <input
             type="text"
             placeholder="School Name"
             value={schoolName}
-            onChange={(e) => setSchoolName(e.target.value)}
+            onChange={handleSchoolNameChange}
             className="px-4 py-2 border rounded-lg"
           />
           <input
             type="text"
             placeholder="End Name"
             value={endName}
-            onChange={(e) => setEndName(e.target.value)}
+            onChange={handleEndNameChange}
             className="px-4 py-2 border rounded-lg"
           />
         </div>

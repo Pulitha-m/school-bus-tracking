@@ -73,10 +73,12 @@ export function Sidebar({ mobileMenuOpen, setMobileMenuOpen }) {
       name: "Career Requests",
       icon: <BriefcaseIcon size={20} />,
     },
-    { id: "feedback",
+    { 
+      id: "feedback",
       name: "Feedback",
-      icon: <MessageSquareIcon size={20} />
+      icon: <MessageSquareIcon size={20} />,
     },
+    
     { id: "inquiries",
       name: "Inquiries",
       icon: <HelpCircleIcon size={20} />

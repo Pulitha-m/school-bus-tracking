@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react'
-import axios from 'axios'
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import {
   ClockIcon,
   PlayIcon,
@@ -8,236 +8,252 @@ import {
   CheckCircleIcon,
   BarChart3Icon,
   FilterIcon,
-} from 'lucide-react'
-import backendUrl from '../../config/config'
+} from 'lucide-react';
+import backendUrl from '../../config/config';
 
 const DriverShift = () => {
   const [activeShift, setActiveShift] = useState({
     startTime: null,
     endTime: null,
-  })
-  const [shiftHistory, setShiftHistory] = useState([])
-  const [currentTime, setCurrentTime] = useState(new Date())
-  const [elapsedTime, setElapsedTime] = useState('00:00:00')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
-  const [driverId, setDriverId] = useState(null)
+  });
+  const [shiftHistory, setShiftHistory] = useState([]);
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [elapsedTime, setElapsedTime] = useState('00:00:00');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [driverId, setDriverId] = useState(null);
+  const [username, setUsername] = useState(null);
   const [filters, setFilters] = useState({
     startDate: '',
     endDate: '',
     status: 'all',
     minHours: '',
     maxHours: '',
-  })
+  });
 
   // Fetch driver details
   useEffect(() => {
     const fetchDriverDetails = async () => {
       try {
-        setLoading(true)
-        const sessionData = sessionStorage.getItem('user')
+        setLoading(true);
+        const sessionData = sessionStorage.getItem('user');
         if (!sessionData) {
-          setError('No user session found')
-          return
+          setError('No user session found');
+          return;
         }
-        const { id } = JSON.parse(sessionData)
+        const { username, id } = JSON.parse(sessionData);
+        setUsername(username);
         const response = await axios.get(`${backendUrl}/getDriverById/${id}`, {
           withCredentials: true,
-        })
-        setDriverId(response.data.id)
+        });
+        setDriverId(response.data.id);
       } catch (err) {
-        console.error('Error fetching driver details:', err)
-        setError('Failed to load driver profile')
+        console.error('Error fetching driver details:', err);
+        setError('Failed to load driver profile');
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    fetchDriverDetails()
-  }, [])
+    fetchDriverDetails();
+  }, []);
 
   // Fetch shift history when driverId or filters change
   useEffect(() => {
     if (driverId) {
-      fetchShiftHistory()
+      fetchShiftHistory();
     }
-  }, [driverId, filters])
+  }, [driverId, filters]);
 
   // Update current time and elapsed time
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentTime(new Date())
-    }, 1000)
+      setCurrentTime(new Date());
+    }, 1000);
 
-    return () => clearInterval(timer)
-  }, [])
+    return () => clearInterval(timer);
+  }, []);
 
   // Calculate elapsed time for active shift
   useEffect(() => {
     if (!activeShift.startTime || activeShift.endTime) {
-      setElapsedTime('00:00:00')
-      return
+      setElapsedTime('00:00:00');
+      return;
     }
 
     const timer = setInterval(() => {
-      const start = new Date(activeShift.startTime)
+      const start = new Date(activeShift.startTime);
       if (isNaN(start.getTime())) {
-        console.warn('Invalid activeShift.startTime:', activeShift.startTime)
-        setElapsedTime('00:00:00')
-        return
+        console.warn('Invalid activeShift.startTime:', activeShift.startTime);
+        setElapsedTime('00:00:00');
+        return;
       }
 
-      const now = new Date()
-      const diffMs = now.getTime() - start.getTime()
+      const now = new Date();
+      const diffMs = now.getTime() - start.getTime();
       if (diffMs < 0) {
-        console.warn('Negative time difference detected:', diffMs)
-        setElapsedTime('00:00:00')
-        return
+        console.warn('Negative time difference detected:', diffMs);
+        setElapsedTime('00:00:00');
+        return;
       }
 
-      const hours = Math.floor(diffMs / (1000 * 60 * 60))
-      const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60))
-      const seconds = Math.floor((diffMs % (1000 * 60)) / 1000)
+      const hours = Math.floor(diffMs / (1000 * 60 * 60));
+      const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
       setElapsedTime(
         `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
-      )
-    }, 1000)
+      );
+    }, 1000);
 
-    return () => clearInterval(timer)
-  }, [activeShift])
+    return () => clearInterval(timer);
+  }, [activeShift]);
+
+  // Parse duration from ISO 8601 format to HH:MM:SS
+  const parseDuration = (durationStr) => {
+    if (!durationStr) return '-';
+    const match = durationStr.match(/PT(?:(\d+\.?\d*)H)?(?:(\d+\.?\d*)M)?(?:(\d+\.?\d*)S)?/);
+    if (!match) return '-';
+    const hours = parseFloat(match[1]) || 0;
+    const minutes = parseFloat(match[2]) || 0;
+    const seconds = parseFloat(match[3]) || 0;
+    const totalSeconds = hours * 3600 + minutes * 60 + seconds;
+    return new Date(totalSeconds * 1000).toISOString().substr(11, 8);
+  };
+
+  // Parse duration to decimal hours
+  const parseDurationToHours = (durationStr) => {
+    if (!durationStr) return 0;
+    const match = durationStr.match(/PT(?:(\d+\.?\d*)H)?(?:(\d+\.?\d*)M)?(?:(\d+\.?\d*)S)?/);
+    if (!match) return 0;
+    const hours = parseFloat(match[1]) || 0;
+    const minutes = parseFloat(match[2]) || 0;
+    const seconds = parseFloat(match[3]) || 0;
+    return hours + minutes / 60 + seconds / 3600;
+  };
 
   const fetchShiftHistory = async () => {
     try {
-      setLoading(true)
-      // Construct query parameters from filters
-      const queryParams = new URLSearchParams()
-      if (filters.startDate) queryParams.append('startDate', filters.startDate)
-      if (filters.endDate) queryParams.append('endDate', filters.endDate)
-      if (filters.status !== 'all') queryParams.append('status', filters.status)
-      if (filters.minHours) queryParams.append('minHours', filters.minHours)
-      if (filters.maxHours) queryParams.append('maxHours', filters.maxHours)
+      setLoading(true);
+      const queryParams = new URLSearchParams();
+      if (filters.startDate) queryParams.append('startDate', filters.startDate);
+      if (filters.endDate) queryParams.append('endDate', filters.endDate);
+      if (filters.status !== 'all') queryParams.append('status', filters.status);
+      if (filters.minHours) queryParams.append('minHours', filters.minHours);
+      if (filters.maxHours) queryParams.append('maxHours', filters.maxHours);
 
       const response = await axios.get(
         `${backendUrl}/api/shifts/driver/${driverId}?${queryParams.toString()}`,
         { withCredentials: true }
-      )
-      const shifts = Array.isArray(response.data) ? response.data : []
-      const mappedShifts = shifts.map(shift => {
+      );
+      const shifts = Array.isArray(response.data) ? response.data : [];
+      const mappedShifts = shifts.map((shift) => {
         const startTime = shift.date && shift.shiftStart
           ? new Date(`${shift.date}T${shift.shiftStart}`)
-          : null
+          : null;
         const endTime = shift.date && shift.shiftEnd
           ? new Date(`${shift.date}T${shift.shiftEnd}`)
-          : null
+          : null;
         return {
           id: shift.id,
           startTime: startTime && !isNaN(startTime.getTime()) ? startTime.toISOString() : null,
           endTime: endTime && !isNaN(endTime.getTime()) ? endTime.toISOString() : null,
           totalHours: parseDuration(shift.totalWorkedTime),
+          totalHoursNumeric: parseDurationToHours(shift.totalWorkedTime),
           status: shift.isLate ? 'late' : 'on-time',
-        }
-      })
-      setShiftHistory(mappedShifts)
+          username: shift.username,
+        };
+      });
+      setShiftHistory(mappedShifts);
     } catch (err) {
-      console.error('Error fetching shift history:', err)
-      setError('Failed to fetch shift history')
+      console.error('Error fetching shift history:', err);
+      setError('Failed to fetch shift history');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  const parseDuration = (duration) => {
-    if (!duration) return '-'
-    try {
-      const match = duration.match(/PT(?:(\d+\.?\d*)H)?(?:(\d+\.?\d*)M)?(?:(\d+\.?\d*)S)?/)
-      if (!match) return '-'
-      const hours = parseFloat(match[1]) || 0
-      const minutes = parseFloat(match[2]) || 0
-      const seconds = parseFloat(match[3]) || 0
-      const totalMinutes = hours * 60 + minutes + seconds / 60
-      const displayHours = Math.floor(totalMinutes / 60)
-      const displayMinutes = Math.round(totalMinutes % 60)
-      return `${displayHours}h ${displayMinutes}m`
-    } catch (err) {
-      console.warn('Error parsing duration:', duration, err)
-      return '-'
-    }
-  }
+  const hasShiftToday = () => {
+    const today = new Date().toISOString().split('T')[0];
+    return shiftHistory.some((shift) => {
+      if (!shift.startTime) return false;
+      const shiftDate = new Date(shift.startTime).toISOString().split('T')[0];
+      return shiftDate === today;
+    });
+  };
 
   const handleStartShift = async () => {
     try {
-      setLoading(true)
+      setLoading(true);
+      if (hasShiftToday()) {
+        setError('Shift already started today');
+        return;
+      }
       const response = await axios.post(
         `${backendUrl}/api/shifts/start/${driverId}`,
-        {},
+        { username },
         { withCredentials: true }
-      )
-      const newShift = response.data
-      const startTime = newShift.startTime ? new Date(newShift.startTime) : new Date()
-
+      );
+      const newShift = response.data;
+      const startTime = newShift.startTime ? new Date(newShift.startTime) : new Date();
       if (isNaN(startTime.getTime())) {
-        console.error('Invalid start time from API:', newShift.startTime)
-        setError('Invalid shift start time')
-        return
+        console.error('Invalid start time from API:', newShift.startTime);
+        setError('Invalid shift start time');
+        return;
       }
-
       setActiveShift({
         startTime,
         endTime: null,
-      })
-      await fetchShiftHistory()
+      });
+      await fetchShiftHistory();
     } catch (err) {
-      console.error('Error starting shift:', err)
-      setError('Failed to start shift')
+      console.error('Error starting shift:', err);
+      setError('Failed to start shift');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleEndShift = async () => {
     try {
-      setLoading(true)
+      setLoading(true);
       const response = await axios.post(
         `${backendUrl}/api/shifts/end/${driverId}`,
-        {},
+        { username },
         { withCredentials: true }
-      )
-      const endedShift = response.data
-      const endTime = endedShift.endTime ? new Date(endedShift.endTime) : new Date()
-
+      );
+      const endedShift = response.data;
+      const endTime = endedShift.endTime ? new Date(endedShift.endTime) : new Date();
       if (isNaN(endTime.getTime())) {
-        console.error('Invalid end time from API:', endedShift.endTime)
-        setError('Invalid shift end time')
-        return
+        console.error('Invalid end time from API:', endedShift.endTime);
+        setError('Invalid shift end time');
+        return;
       }
-
       setActiveShift({
         ...activeShift,
         endTime,
-      })
-      await fetchShiftHistory()
-
+      });
+      await fetchShiftHistory();
       setTimeout(() => {
         setActiveShift({
           startTime: null,
           endTime: null,
-        })
-      }, 3000)
+        });
+      }, 3000);
     } catch (err) {
-      console.error('Error ending shift:', err)
-      setError('Failed to end shift')
+      console.error('Error ending shift:', err);
+      setError('Failed to end shift');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleFilterChange = (e) => {
-    const { name, value } = e.target
+    const { name, value } = e.target;
     setFilters((prev) => ({
       ...prev,
       [name]: value,
-    }))
-  }
+    }));
+  };
 
   const resetFilters = () => {
     setFilters({
@@ -246,20 +262,24 @@ const DriverShift = () => {
       status: 'all',
       minHours: '',
       maxHours: '',
-    })
-  }
+    });
+  };
 
-  const isLate =
-    currentTime.getHours() >= 8 &&
-    currentTime.getMinutes() > 0 &&
-    !activeShift.startTime
+  const isLateShift = (startTime) => {
+    if (!startTime) return true;
+    const hours = new Date(startTime).getHours();
+    const minutes = new Date(startTime).getMinutes();
+    return hours > 6 || (hours === 6 && minutes > 30);
+  };
+
+  const isLate = !activeShift.startTime && isLateShift(currentTime);
 
   const formattedTime = currentTime.toLocaleTimeString('en-US', {
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
     hour12: false,
-  })
+  });
 
   // Calculate analytics based on filtered data
   const analytics = {
@@ -275,29 +295,22 @@ const DriverShift = () => {
           )
         : 0,
     avgWorkingTime: (() => {
-      let totalMinutes = 0
-      let validShifts = 0
+      let totalHours = 0;
+      let validShifts = 0;
       shiftHistory.forEach((shift) => {
-        if (shift.startTime && shift.endTime) {
-          const start = new Date(shift.startTime)
-          const end = new Date(shift.endTime)
-          if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
-            const minutes = (end - start) / (1000 * 60)
-            totalMinutes += minutes
-            validShifts += 1
-          }
+        if (shift.totalHoursNumeric) {
+          totalHours += shift.totalHoursNumeric;
+          validShifts += 1;
         }
-      })
-      const avgHours =
-        validShifts > 0 ? Math.floor(totalMinutes / validShifts / 60) : 0
-      const avgMinutes =
-        validShifts > 0 ? Math.round(totalMinutes / validShifts) % 60 : 0
-      return `${avgHours}h ${avgMinutes}m`
+      });
+      const avgHours = validShifts > 0 ? Math.floor(totalHours / validShifts) : 0;
+      const avgMinutes = validShifts > 0 ? Math.round((totalHours / validShifts) * 60) % 60 : 0;
+      return `${avgHours}h ${avgMinutes}m`;
     })(),
-  }
+  };
 
   if (!driverId && loading) {
-    return <div>Loading driver profile...</div>
+    return <div>Loading driver profile...</div>;
   }
 
   if (!driverId && error) {
@@ -308,7 +321,7 @@ const DriverShift = () => {
           {error}
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -330,7 +343,7 @@ const DriverShift = () => {
             <p className="text-sm text-gray-500 mb-1">Current Time</p>
             <p className="text-2xl font-bold">{formattedTime}</p>
             <p className="text-sm text-gray-500 mt-2">
-              Scheduled: 08:00 - 16:00
+              Scheduled: 06:00 - 14:00
             </p>
           </div>
           <div className="flex flex-col items-center justify-center p-4 bg-gray-50 rounded-lg">
@@ -393,9 +406,9 @@ const DriverShift = () => {
                 <p className="text-sm text-gray-500 mb-1">Shift Controls</p>
                 <button
                   onClick={handleStartShift}
-                  disabled={activeShift.endTime !== null || loading}
+                  disabled={activeShift.endTime !== null || loading || hasShiftToday()}
                   className={`mt-2 px-4 py-2 rounded-md flex items-center gap-2 ${
-                    activeShift.endTime || loading
+                    activeShift.endTime || loading || hasShiftToday()
                       ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
                       : 'bg-green-500 hover:bg-green-600 text-white'
                   }`}
@@ -403,9 +416,9 @@ const DriverShift = () => {
                   <PlayIcon size={18} />
                   Start Shift
                 </button>
-                {activeShift.endTime && (
+                {(activeShift.endTime || hasShiftToday()) && (
                   <p className="text-sm text-gray-500 mt-2">
-                    Shift completed today
+                    Shift completed or already started today
                   </p>
                 )}
               </>
@@ -479,6 +492,9 @@ const DriverShift = () => {
                 <thead>
                   <tr>
                     <th className="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Username
+                    </th>
+                    <th className="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Date
                     </th>
                     <th className="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -497,13 +513,16 @@ const DriverShift = () => {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {shiftHistory.map((shift, index) => {
-                    const startDate = shift.startTime ? new Date(shift.startTime) : null
-                    const endDate = shift.endTime ? new Date(shift.endTime) : null
-                    const isValidStartDate = startDate && !isNaN(startDate.getTime())
-                    const isValidEndDate = endDate && !isNaN(endDate.getTime())
+                    const startDate = shift.startTime ? new Date(shift.startTime) : null;
+                    const endDate = shift.endTime ? new Date(shift.endTime) : null;
+                    const isValidStartDate = startDate && !isNaN(startDate.getTime());
+                    const isValidEndDate = endDate && !isNaN(endDate.getTime());
 
                     return (
                       <tr key={`${shift.id}-${index}`}>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                          {shift.username || '-'}
+                        </td>
                         <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
                           {isValidStartDate
                             ? startDate.toISOString().split('T')[0]
@@ -544,7 +563,7 @@ const DriverShift = () => {
                           )}
                         </td>
                       </tr>
-                    )
+                    );
                   })}
                 </tbody>
               </table>
@@ -553,7 +572,7 @@ const DriverShift = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default DriverShift
+export default DriverShift;

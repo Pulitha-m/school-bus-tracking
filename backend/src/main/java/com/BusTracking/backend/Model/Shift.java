@@ -25,6 +25,8 @@ public class Shift {
 
     private Boolean isLate;
 
+    private String username;
+
     // Getters and Setters
     public Long getId() { return id; }
 
@@ -53,5 +55,13 @@ public class Shift {
     public Boolean getIsLate() { return isLate; }
 
     public void setIsLate(Boolean isLate) { this.isLate = isLate; }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
 }
 

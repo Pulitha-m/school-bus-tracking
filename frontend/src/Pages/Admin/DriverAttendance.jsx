@@ -1,79 +1,73 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   UsersIcon,
   SearchIcon,
   CheckCircleIcon,
   AlertCircleIcon,
   ClockIcon,
-  MoreVerticalIcon,
-  CalendarIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
   DownloadIcon,
   FilterIcon,
-} from "lucide-react";
-import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable";
-import backendUrl from "../../config/config";
+} from 'lucide-react';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import backendUrl from '../../config/config';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const ShiftManagement = () => {
   const [shifts, setShifts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [currentDate, setCurrentDate] = useState(new Date());
   const [filters, setFilters] = useState({
-    startDate: "",
-    endDate: "",
-    driverId: "",
-    status: "all", // 'all', 'late', 'on-time'
-    minDuration: "",
-    maxDuration: "",
+    date: '',
+    status: 'all',
+    maxDuration: '',
   });
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+  const [isDownloading, setIsDownloading] = useState(false);
 
-  // Fetch shifts based on filters
+  // Debounce search input
   useEffect(() => {
-    const fetchShifts = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const queryParams = new URLSearchParams();
-        if (filters.startDate)
-          queryParams.append("startDate", filters.startDate);
-        if (filters.endDate) queryParams.append("endDate", filters.endDate);
-        if (filters.driverId) queryParams.append("driverId", filters.driverId);
-        if (filters.status !== "all")
-          queryParams.append("status", filters.status);
-        if (filters.minDuration)
-          queryParams.append("minDuration", filters.minDuration);
-        if (filters.maxDuration)
-          queryParams.append("maxDuration", filters.maxDuration);
+    const handler = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300);
 
-        const response = await fetch(
-          `${backendUrl}/api/shifts/getAll?${queryParams.toString()}`
-        );
-        if (!response.ok) throw new Error("Failed to fetch shifts");
-        const data = await response.json();
-        setShifts(Array.isArray(data) ? data : []);
-      } catch (err) {
-        console.error("Error fetching shifts:", err);
-        setError("Failed to load shift data. Please try again.");
-      } finally {
-        setLoading(false);
-      }
-    };
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
 
+  // Fetch shifts based on filters and debounced search query
+  const fetchShifts = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const queryParams = new URLSearchParams();
+      if (filters.date) queryParams.append('date', filters.date);
+      if (debouncedSearchQuery) queryParams.append('username', debouncedSearchQuery);
+      if (filters.status !== 'all') queryParams.append('status', filters.status);
+      if (filters.maxDuration) queryParams.append('maxDuration', filters.maxDuration);
+
+      const response = await fetch(`${backendUrl}/api/shifts/getAll?${queryParams.toString()}`);
+      if (!response.ok) throw new Error('Failed to fetch shifts');
+      const data = await response.json();
+      setShifts(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error('Error fetching shifts:', err);
+      setError('Failed to load shift data. Please try again.');
+      toast.error('Failed to load shift data');
+    } finally {
+      setLoading(false);
+    }
+  }, [filters, debouncedSearchQuery]);
+
+  useEffect(() => {
     fetchShifts();
-  }, [filters]);
+  }, [fetchShifts]);
 
-  // Format ISO time string to HH:mm:ss
-  const formatTime = (timeStr) => {
-    if (!timeStr) return "-";
-    const date = new Date(`1970-01-01T${timeStr}Z`);
-    return date.toLocaleTimeString("en-GB", { hour12: false });
-  };
+  // Format time and duration helpers
+  const formatTime = (timeStr) =>
+    timeStr ? new Date(`1970-01-01T${timeStr}Z`).toLocaleTimeString('en-GB', { hour12: false }) : '-';
 
-  // Convert ISO 8601 duration to readable format (HH:mm:ss)
   const formatDuration = (durationStr) => {
     if (!durationStr) return "-";
     const match = durationStr.match(
@@ -87,7 +81,6 @@ const ShiftManagement = () => {
     return new Date(totalSeconds * 1000).toISOString().substr(11, 8);
   };
 
-  // Parse duration to total hours for filtering
   const parseDurationToHours = (durationStr) => {
     if (!durationStr) return 0;
     const match = durationStr.match(
@@ -100,15 +93,29 @@ const ShiftManagement = () => {
     return hours + minutes / 60 + seconds / 3600;
   };
 
-  // Filter shifts based on search query and current date
-  const filteredShifts = shifts.filter((shift) => {
-    const shiftDate = new Date(shift.date);
-    const matchesDate = shiftDate.toDateString() === currentDate.toDateString();
-    const matchesSearch = shift.driverId.toString().includes(searchQuery);
-    return matchesDate && matchesSearch;
-  });
+  // Memoized filtered shifts
+  const filteredShifts = useMemo(() => {
+    return shifts.filter((shift) => {
+      const matchesSearch = debouncedSearchQuery
+        ? shift.username && typeof shift.username === 'string'
+          ? shift.username.toLowerCase().includes(debouncedSearchQuery.toLowerCase())
+          : false
+        : true;
+      const matchesDate = filters.date
+        ? new Date(shift.date).toISOString().slice(0, 10) === filters.date
+        : true;
+      const matchesStatus =
+        filters.status === 'all' ||
+        (filters.status === 'late' && shift.isLate) ||
+        (filters.status === 'on-time' && !shift.isLate);
+      const matchesMaxDuration = filters.maxDuration
+        ? parseDurationToHours(shift.totalWorkedTime) <= parseFloat(filters.maxDuration)
+        : true;
+      return matchesSearch && matchesDate && matchesStatus && matchesMaxDuration;
+    });
+  }, [shifts, debouncedSearchQuery, filters]);
 
-  // Calculate statistics based on filtered shifts
+  // Calculate statistics
   const totalShifts = filteredShifts.length;
   const lateShifts = filteredShifts.filter((shift) => shift.isLate).length;
   const onTimeShifts = totalShifts - lateShifts;
@@ -121,147 +128,170 @@ const ShiftManagement = () => {
     ? "-"
     : `${Math.floor(avgDuration)}h ${Math.round((avgDuration % 1) * 60)}m`;
 
-  // Handle filter changes
+  // Handlers
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
+    if (name === 'maxDuration' && value < 0) {
+      toast.error('Max duration cannot be negative');
+      return;
+    }
     setFilters((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Reset filters
   const resetFilters = () => {
     setFilters({
-      startDate: "",
-      endDate: "",
-      driverId: "",
-      status: "all",
-      minDuration: "",
-      maxDuration: "",
+      date: '',
+      status: 'all',
+      maxDuration: '',
     });
-    setSearchQuery("");
+    setSearchQuery('');
+    toast.info('Filters reset');
   };
 
-  // Navigation for date
-  const prevDay = () => {
-    const newDate = new Date(currentDate);
-    newDate.setDate(newDate.getDate() - 1);
-    setCurrentDate(newDate);
-  };
+  // Enhanced PDF Export
+  const exportToPDF = async () => {
+    try {
+      setIsDownloading(true);
 
-  const nextDay = () => {
-    const newDate = new Date(currentDate);
-    newDate.setDate(newDate.getDate() + 1);
-    setCurrentDate(newDate);
-  };
+      if (filteredShifts.length === 0) {
+        toast.error('No data available to export');
+        return;
+      }
 
-  const formatDate = (date) => {
-    return date.toLocaleDateString("en-US", {
-      weekday: "long",
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-    });
-  };
+      const doc = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm'
+      });
 
-  // Export to PDF function
-  const exportToPDF = () => {
-    const doc = new jsPDF();
+      let currentY = 10;
 
-    // Report title and metadata
-    doc.setFontSize(18);
-    doc.setTextColor(40);
-    doc.text("Driver Shift Report", 105, 15, { align: "center" });
+      // Add logo
+      try {
+        const logoUrl = '/logost.png';
+        const img = new Image();
+        img.crossOrigin = 'Anonymous';
+        img.src = logoUrl;
+        await new Promise((resolve, reject) => {
+          img.onload = resolve;
+          img.onerror = reject;
+        });
+        const imgWidth = 50;
+        const imgHeight = (img.height * imgWidth) / img.width;
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const logoX = (pageWidth - imgWidth) / 2;
+        doc.addImage(img, 'PNG', logoX, currentY, imgWidth, imgHeight);
+        currentY += imgHeight + 10;
+      } catch (error) {
+        console.error('Failed to load logo:', error);
+        toast.warn('Logo not included in PDF due to loading issue.');
+        currentY += 10;
+      }
 
-    doc.setFontSize(12);
-    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 105, 22, {
-      align: "center",
-    });
-    doc.text(`Date: ${formatDate(currentDate)}`, 105, 28, { align: "center" });
+      // Report title
+      const title = `Driver Shift Management Report for ${filters.date || 'All Dates'}`;
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      const titleWidth = doc.getTextWidth(title);
+      const pageWidth = doc.internal.pageSize.getWidth();
+      doc.text(title, (pageWidth - titleWidth) / 2, currentY);
+      currentY += 10;
 
-    // Display applied filters
-    const appliedFilters = Object.entries(filters)
-      .filter(([_, value]) => value && value !== "all")
-      .map(([key, value]) => `${key}: ${value}`)
-      .join(", ");
-    doc.text(`Filters Applied: ${appliedFilters || "None"}`, 105, 34, {
-      align: "center",
-    });
+      // Generated date
+      const generatedDate = `Generated on: ${new Date().toLocaleDateString()}`;
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'normal');
+      const dateWidth = doc.getTextWidth(generatedDate);
+      doc.text(generatedDate, (pageWidth - dateWidth) / 2, currentY);
+      currentY += 15;
 
-    // Summary metrics
-    doc.setFontSize(14);
-    doc.text("Summary Statistics", 14, 46);
+      // Summary metrics
+      doc.setFontSize(14);
+      doc.text('Summary Statistics', 15, currentY);
+      currentY += 10;
 
-    doc.setFontSize(12);
-    doc.text(`Total Shifts: ${totalShifts}`, 14, 54);
-    doc.text(
-      `On Time Shifts: ${onTimeShifts} (${
-        totalShifts > 0 ? Math.round((onTimeShifts / totalShifts) * 100) : 0
-      }%)`,
-      14,
-      62
-    );
-    doc.text(
-      `Late Shifts: ${lateShifts} (${
-        totalShifts > 0 ? Math.round((lateShifts / totalShifts) * 100) : 0
-      }%)`,
-      14,
-      70
-    );
-    doc.text(`Average Shift Duration: ${formattedAvgDuration}`, 14, 78);
+      doc.setFontSize(12);
+      doc.text(`Total Shifts: ${totalShifts}`, 15, currentY);
+      currentY += 8;
+      doc.text(`On Time Shifts: ${onTimeShifts} (${totalShifts > 0 ? Math.round((onTimeShifts / totalShifts) * 100) : 0}%)`, 15, currentY);
+      currentY += 8;
+      doc.text(`Late Shifts: ${lateShifts} (${totalShifts > 0 ? Math.round((lateShifts / totalShifts) * 100) : 0}%)`, 15, currentY);
+      currentY += 8;
+      doc.text(`Average Shift Duration: ${formattedAvgDuration}`, 15, currentY);
+      currentY += 15;
 
-    // Table data preparation
-    const tableData = filteredShifts.map((shift) => [
-      shift.driverId,
-      new Date(shift.date).toLocaleDateString(),
-      formatTime(shift.shiftStart),
-      formatTime(shift.shiftEnd),
-      formatDuration(shift.totalWorkedTime),
-      shift.isLate ? "Late" : "On Time",
-    ]);
+      // Display applied filters
+      const appliedFilters = [
+        filters.date ? `Date: ${filters.date}` : '',
+        debouncedSearchQuery ? `Username: ${debouncedSearchQuery}` : '',
+        filters.status !== 'all' ? `Status: ${filters.status}` : '',
+        filters.maxDuration ? `Max Duration: ${filters.maxDuration}h` : '',
+      ].filter(Boolean).join(', ');
+      doc.setFontSize(12);
+      doc.text(`Filters Applied: ${appliedFilters || 'None'}`, 15, currentY);
+      currentY += 15;
 
-    // Add the table using autoTable
-    autoTable(doc, {
-      head: [
-        ["Driver ID", "Date", "Shift Start", "Shift End", "Duration", "Status"],
-      ],
-      body: tableData,
-      startY: 86,
-      theme: "grid",
-      headStyles: {
-        fillColor: [245, 158, 11], // yellow-500
-        textColor: [255, 255, 255],
-        fontStyle: "bold",
-      },
-      alternateRowStyles: {
-        fillColor: [249, 250, 251], // gray-50
-      },
-      margin: { top: 86 },
-      styles: {
-        fontSize: 10,
-        cellPadding: 3,
-      },
-    });
+      // Table data preparation
+      const tableData = filteredShifts.map((shift) => [
+        shift.username || 'Unknown',
+        new Date(shift.date).toLocaleDateString(),
+        formatTime(shift.shiftStart),
+        formatTime(shift.shiftEnd),
+        formatDuration(shift.totalWorkedTime),
+        shift.isLate ? 'Late' : 'On Time',
+      ]);
 
-    // Footer
-    const pageCount = doc.internal.getNumberOfPages();
-    for (let i = 1; i <= pageCount; i++) {
-      doc.setPage(i);
-      doc.setFontSize(10);
-      doc.text(
-        `Page ${i} of ${pageCount}`,
-        105,
-        doc.internal.pageSize.height - 10,
-        { align: "center" }
-      );
+      // Add the table using autoTable
+      autoTable(doc, {
+        startY: currentY,
+        head: [['Username', 'Date', 'Shift Start', 'Shift End', 'Duration', 'Status']],
+        body: tableData,
+        theme: 'grid',
+        headStyles: {
+          fillColor: [59, 130, 246],
+          textColor: [255, 255, 255],
+          fontStyle: 'bold',
+        },
+        styles: {
+          fontSize: 10,
+          cellPadding: 3,
+          halign: 'center',
+          overflow: 'linebreak',
+        },
+        columnStyles: {
+          0: { cellWidth: 'auto' },
+          1: { cellWidth: 'auto' },
+          2: { cellWidth: 'auto' },
+          3: { cellWidth: 'auto' },
+          4: { cellWidth: 'auto' },
+          5: { cellWidth: 'auto' },
+        },
+      });
+
+      // Footer
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(10);
+        doc.text(`Page ${i} of ${pageCount}`, pageWidth / 2, doc.internal.pageSize.height - 10, { align: 'center' });
+      }
+
+      doc.save(`shift_management_report_${filters.date || 'all_dates'}.pdf`);
+      toast.success('PDF report downloaded successfully');
+    } catch (err) {
+      console.error('PDF generation error:', err);
+      toast.error('Failed to generate PDF report');
+    } finally {
+      setIsDownloading(false);
     }
-
-    doc.save(
-      `driver-shift-report-${currentDate.toISOString().slice(0, 10)}.pdf`
-    );
   };
 
 
   if (loading) {
-    return <div className="p-6">Loading shifts...</div>;
+    return (
+      <div className="p-6 flex justify-center items-center h-screen">
+        <ClockIcon className="animate-spin text-blue-600" size={32} />
+      </div>
+    );
   }
 
   if (error) {
@@ -276,197 +306,145 @@ const ShiftManagement = () => {
   }
 
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
+    <div className="p-6 space-y-8">
+      <ToastContainer position="top-right" autoClose={3000} />
+
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Shift Management</h1>
-        <button
-          onClick={exportToPDF}
-          className="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 flex items-center gap-2"
-        >
-          <DownloadIcon size={18} />
-          Export to PDF
-        </button>
-      </div>
-
-      {/* Date Navigation */}
-      <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6 flex items-center justify-between">
-        <button
-          onClick={prevDay}
-          className="p-2 hover:bg-gray-100 rounded-full"
-        >
-          <ChevronLeftIcon size={24} />
-        </button>
-        <div className="flex items-center gap-2">
-          <CalendarIcon size={20} className="text-yellow-500" />
-          <span className="text-lg font-semibold">
-            {formatDate(currentDate)}
-          </span>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
+        <h1 className="text-2xl font-bold text-gray-800">Shift Management Dashboard</h1>
+        <div className="flex gap-3">
+          <button
+            onClick={exportToPDF}
+            disabled={isDownloading || filteredShifts.length === 0}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isDownloading ? (
+              <ClockIcon className="animate-spin" size={18} />
+            ) : (
+              <DownloadIcon size={18} />
+            )}
+            {isDownloading ? 'Generating...' : 'Export to PDF'}
+          </button>
         </div>
-        <button
-          onClick={nextDay}
-          className="p-2 hover:bg-gray-100 rounded-full"
-        >
-          <ChevronRightIcon size={24} />
-        </button>
       </div>
 
-      {/* Filters */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+      {/* Filters Section */}
+      <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
         <div className="flex items-center gap-2 mb-4">
-          <FilterIcon size={20} className="text-yellow-500" />
-          <h3 className="text-lg font-semibold">Report Filters</h3>
+          <FilterIcon size={20} className="text-yellow-600" />
+          <h3 className="text-lg font-semibold text-gray-800">Report Filters</h3>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Start Date
-            </label>
+
+        <div className="flex flex-wrap gap-4 items-center">
+          {/* Date Filter */}
+          <div className="relative min-w-[200px]">
             <input
               type="date"
-              name="startDate"
-              value={filters.startDate}
+              name="date"
+              value={filters.date}
               onChange={handleFilterChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-300 focus:ring focus:ring-yellow-200 focus:ring-opacity-50"
+              className="w-full pl-10 pr-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
             />
+            <ClockIcon className="absolute left-3 top-2.5 text-gray-400" size={18} />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              End Date
-            </label>
-            <input
-              type="date"
-              name="endDate"
-              value={filters.endDate}
-              onChange={handleFilterChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-300 focus:ring focus:ring-yellow-200 focus:ring-opacity-50"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Driver ID
-            </label>
-            <input
-              type="text"
-              name="driverId"
-              value={filters.driverId}
-              onChange={handleFilterChange}
-              placeholder="Enter Driver ID"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-300 focus:ring focus:ring-yellow-200 focus:ring-opacity-50"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Status
-            </label>
+
+          {/* Status Filter */}
+          <div className="min-w-[200px]">
             <select
               name="status"
               value={filters.status}
               onChange={handleFilterChange}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-300 focus:ring focus:ring-yellow-200 focus:ring-opacity-50"
+              className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
             >
-              <option value="all">All</option>
+              <option value="all">All Shifts</option>
               <option value="on-time">On Time</option>
               <option value="late">Late</option>
             </select>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Min Duration (hours)
-            </label>
-            <input
-              type="number"
-              name="minDuration"
-              value={filters.minDuration}
-              onChange={handleFilterChange}
-              placeholder="e.g., 4"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-300 focus:ring focus:ring-yellow-200 focus:ring-opacity-50"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Max Duration (hours)
-            </label>
+
+          {/* Max Duration Filter */}
+          <div className="min-w-[200px]">
             <input
               type="number"
               name="maxDuration"
               value={filters.maxDuration}
               onChange={handleFilterChange}
-              placeholder="e.g., 8"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-300 focus:ring focus:ring-yellow-200 focus:ring-opacity-50"
+              placeholder="Max hours"
+              min="0"
+              step="0.1"
+              className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
             />
           </div>
-          <div className="flex items-end">
-            <button
-              onClick={resetFilters}
-              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
-            >
-              Reset Filters
-            </button>
-          </div>
+
+          {/* Reset Button */}
+          <button
+            onClick={resetFilters}
+            className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 flex items-center gap-2"
+          >
+            <FilterIcon size={18} />
+            Reset Filters
+          </button>
         </div>
       </div>
 
-      {/* Search and Statistics */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        {/* Search */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+      {/* Search and Statistics Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Search Panel */}
+        <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
-            <SearchIcon size={20} className="text-yellow-500" />
-            <h3 className="text-lg font-semibold">Search Shifts</h3>
+            <SearchIcon size={20} className="text-yellow-600" />
+            <h3 className="text-lg font-semibold text-gray-800">Search Shifts</h3>
           </div>
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by Driver ID..."
-            className="w-full p-2 border border-gray-300 rounded-md focus:border-yellow-300 focus:ring focus:ring-yellow-200 focus:ring-opacity-50"
-          />
+          <div className="relative">
+            <SearchIcon className="absolute left-3 top-2.5 text-gray-400" size={18} />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by Username..."
+              className="w-full pl-10 pr-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
         </div>
 
-        {/* Statistics */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+        {/* Statistics Panel */}
+        <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
-            <UsersIcon size={20} className="text-yellow-500" />
-            <h3 className="text-lg font-semibold">Shift Statistics</h3>
+            <UsersIcon size={20} className="text-yellow-600" />
+            <h3 className="text-lg font-semibold text-gray-800">Shift Analytics</h3>
           </div>
+
           {totalShifts === 0 ? (
-            <p className="text-sm text-gray-500">No shift data available</p>
+            <p className="text-sm text-gray-500">No shift data available for selected filters</p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-gray-50 rounded-lg p-4">
+              {/* Average Duration Card */}
+              <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-100">
                 <div className="flex items-center gap-2 mb-2">
-                  <ClockIcon size={16} className="text-blue-500" />
-                  <h4 className="font-medium">Average Shift Duration</h4>
+                  <ClockIcon size={16} className="text-yellow-600" />
+                  <h4 className="font-medium text-yellow-800">Avg. Duration</h4>
                 </div>
-                <p className="text-2xl font-bold">{formattedAvgDuration}</p>
+                <p className="text-2xl font-bold text-yellow-900">{formattedAvgDuration}</p>
               </div>
-              <div className="bg-gray-50 rounded-lg p-4">
+
+              {/* Attendance Rate Card */}
+              <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-100">
                 <div className="flex items-center gap-2 mb-2">
-                  <CheckCircleIcon size={16} className="text-green-500" />
-                  <h4 className="font-medium">Attendance Rate</h4>
+                  <CheckCircleIcon size={16} className="text-yellow-600" />
+                  <h4 className="font-medium text-yellow-800">On Time Rate</h4>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-full bg-gray-200 rounded-full h-2.5">
                     <div
-                      className="bg-green-500 h-2.5 rounded-full"
-                      style={{
-                        width: `${
-                          totalShifts > 0
-                            ? (onTimeShifts / totalShifts) * 100
-                            : 0
-                        }%`,
-                      }}
+                      className="bg-yellow-500 h-2.5 rounded-full"
+                      style={{ width: `${totalShifts > 0 ? (onTimeShifts / totalShifts) * 100 : 0}%` }}
                     ></div>
                   </div>
-                  <span className="text-sm font-medium">
-                    {totalShifts > 0
-                      ? Math.round((onTimeShifts / totalShifts) * 100)
-                      : 0}
-                    %
+                  <span className="text-sm font-medium text-yellow-900">
+                    {totalShifts > 0 ? Math.round((onTimeShifts / totalShifts) * 100) : 0}%
                   </span>
                 </div>
-                <div className="flex justify-between mt-2 text-xs text-gray-500">
+                <div className="flex justify-between mt-2 text-xs text-yellow-700">
                   <span>On Time: {onTimeShifts}</span>
                   <span>Late: {lateShifts}</span>
                 </div>
@@ -476,54 +454,58 @@ const ShiftManagement = () => {
         </div>
       </div>
 
-      {/* Shift Table */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <div className="flex items-center justify-between mb-4">
+      {/* Shift Data Table */}
+      <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
           <div className="flex items-center gap-2">
-            <ClockIcon size={20} className="text-yellow-500" />
-            <h3 className="text-lg font-semibold">Shift Records</h3>
+            <ClockIcon size={20} className="text-yellow-600" />
+            <h3 className="text-xl font-bold text-gray-800">Shift Records</h3>
           </div>
-          <button className="text-sm text-blue-600 hover:text-blue-800">
-            View All
-          </button>
+          <div className="text-sm text-gray-500">
+            Showing {filteredShifts.length} of {shifts.length} total shifts
+          </div>
         </div>
+
         {filteredShifts.length === 0 ? (
-          <p className="text-sm text-gray-500">
-            No shifts found for the selected criteria.
-          </p>
+          <div className="text-center py-8">
+            <p className="text-gray-500">No shifts match your current filters</p>
+            <button
+              onClick={resetFilters}
+              className="mt-2 px-4 py-2 text-blue-600 hover:text-blue-800"
+            >
+              Clear all filters
+            </button>
+          </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead>
+              <thead className="bg-gray-100">
                 <tr>
-                  <th className="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Driver ID
+                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-600">
+                    Username
                   </th>
-                  <th className="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-600">
                     Date
                   </th>
-                  <th className="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Shift Start
+                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-600">
+                    Start Time
                   </th>
-                  <th className="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Shift End
+                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-600">
+                    End Time
                   </th>
-                  <th className="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-600">
                     Duration
                   </th>
-                  <th className="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-bold text-gray-600">
                     Status
-                  </th>
-                  <th className="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="divide-y divide-gray-200">
                 {filteredShifts.map((shift, index) => (
-                  <tr key={`${shift.id}-${index}`}>
+                  <tr key={`${shift.id}-${index}`} className="hover:bg-blue-50">
                     <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {shift.driverId}
+                      {shift.username || 'Unknown'}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
                       {new Date(shift.date).toLocaleDateString()}
@@ -539,19 +521,14 @@ const ShiftManagement = () => {
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       {shift.isLate ? (
-                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                        <span className="px-2 inline-flex items-center text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
                           <AlertCircleIcon size={14} className="mr-1" /> Late
                         </span>
                       ) : (
-                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                        <span className="px-2 inline-flex items-center text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
                           <CheckCircleIcon size={14} className="mr-1" /> On Time
                         </span>
                       )}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                      <button className="text-gray-500 hover:text-gray-700">
-                        <MoreVerticalIcon size={18} />
-                      </button>
                     </td>
                   </tr>
                 ))}
