@@ -6,5 +6,8 @@ import java.util.List;
 
 public interface FeedbackRepo extends JpaRepository<Feedback, Long> {
     List<Feedback> findByStudentId(Long studentId);
+    List<Feedback> findTop3ByOrderBySubmittedAtDesc();
 }
+
+
 
