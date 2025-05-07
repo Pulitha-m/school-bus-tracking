@@ -103,7 +103,7 @@ const AddAttendance = () => {
   const validateForm = () => {
     const newErrors = {};
     const trimmedName = formData.studentName.trim();
-    const namePattern = /^[A-Za-z]+ [A-Za-z]+$/;
+    const namePattern = /^[A-Za-z]+ [A-Za-z]+$/;  
   
     if (!trimmedName) {
       newErrors.studentName = "Student name is required";
