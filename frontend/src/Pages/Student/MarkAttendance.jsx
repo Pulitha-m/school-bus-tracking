@@ -133,7 +133,7 @@ const MarkAttendance = () => {
 </div>
 
   // Prepare data for the bar chart
-  const daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri"];
   const attendanceByDay = daysOfWeek.map((_, index) => {
     const dayRecords = attendanceRecords.filter((record) => {
       const date = new Date(record.date);
