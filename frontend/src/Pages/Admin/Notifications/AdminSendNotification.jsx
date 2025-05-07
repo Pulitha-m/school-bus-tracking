@@ -8,7 +8,7 @@ import backendUrl from "../../../config/config";
 
 export default function AdminSendNotification() {
   const [busId, setBusId] = useState("");
-  const [driverUsername, setDriverUsername] = useState("@");
+  const [driverUsername, setDriverUsername] = useState("");
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
   const [level, setLevel] = useState("INFO");
@@ -17,7 +17,8 @@ export default function AdminSendNotification() {
   const [errors, setErrors] = useState({});
   const [shake, setShake] = useState(false);
   const [buses, setBuses] = useState([]);
-  const navigate = useNavigate(); // ✅ useNavigate hook
+  const navigate = useNavigate();
+  // ✅ useNavigate hook
 
   useEffect(() => {
     fetchBuses();
@@ -39,11 +40,12 @@ export default function AdminSendNotification() {
 
   const handleDriverUsernameChange = (e) => {
     let input = e.target.value;
-    if (!input.startsWith("@")) {
-      input = "@" + input;
-    }
-    const cleaned = "@" + input.slice(1).replace(/[^A-Za-z]/g, "");
-    setDriverUsername(cleaned);
+
+    input = input.replace(/[^A-Za-z\s]/g, "");
+
+    input = input.replace(/\s+/g, " ").trimStart();
+
+    setDriverUsername(input);
     setErrors((prev) => ({ ...prev, driverUsername: "" }));
   };
 
@@ -63,8 +65,9 @@ export default function AdminSendNotification() {
     const newErrors = {};
 
     if (!busId) newErrors.busId = "Please select a Bus ID.";
-    if (!driverUsername || driverUsername.trim() === "@")
-      newErrors.driverUsername = "Driver Username is required.";
+    if (!driverUsername || driverUsername.trim() === "")
+      newErrors.driverUsername = "Driver Username is required";
+
     if (!title) newErrors.title = "Title is required.";
     if (!message) newErrors.message = "Message is required.";
 
@@ -104,7 +107,7 @@ export default function AdminSendNotification() {
 
   const handleClear = () => {
     setBusId("");
-    setDriverUsername("@");
+    setDriverUsername("");
     setTitle("");
     setMessage("");
     setLevel("INFO");
@@ -153,7 +156,7 @@ export default function AdminSendNotification() {
           <div>
             <input
               type="text"
-              placeholder="Driver Username (start with @)"
+              placeholder="Driver Username"
               value={driverUsername}
               onChange={handleDriverUsernameChange}
               className={`w-full border ${

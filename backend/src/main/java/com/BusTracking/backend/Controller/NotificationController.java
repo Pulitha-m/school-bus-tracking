@@ -60,10 +60,22 @@ public class NotificationController {
 
 
 
+
+
+
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<String> deleteNotification(@PathVariable Long id) {
         notificationRepository.deleteById(id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Notification deleted successfully");
+    }
+
+    @GetMapping("/getLatestByBusId/{busId}")
+    public Notification getLatestByBusId(@PathVariable String busId) {
+
+        Notification notification = notificationRepository.findFirstByBusIdOrderByTimestampDesc(busId);
+
+        System.out.println(notification.getBusId());
+        return notification;
     }
 
 }

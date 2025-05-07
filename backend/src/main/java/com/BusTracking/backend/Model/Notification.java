@@ -19,6 +19,15 @@ public class Notification {
     private String level; // INFO, WARNING, CRITICAL
     private String message;
     private Date timestamp;
+    private String rating;
+
+    public String getRating() {
+        return rating;
+    }
+
+    public void setRating(String rating) {
+        this.rating = rating;
+    }
 
     // Getters and setters
 
