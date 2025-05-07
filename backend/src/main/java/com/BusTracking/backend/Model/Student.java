@@ -24,6 +24,7 @@ public class Student {
     private String startLocation;
     private String endLocation;
 
+    @Column(name = "bus_id")
     private Long busId;
     private Long routeId;
 
@@ -45,10 +46,22 @@ public class Student {
     @Column(name = "qr_code_base64", columnDefinition = "LONGTEXT")
     private String qrCodeBase64;
 
+//    private String noPlate;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "bus_id", insertable = false, updatable = false)
+    private Bus bus;
+
+
     // Constructors
     public Student() {}
 
     // Getters and Setters
+
+    @Transient
+    public String getNoPlate() {
+        return (bus != null) ? bus.getNoPlate() : null;
+    }
 
     public Long getId() {
         return id;
@@ -193,4 +206,5 @@ public class Student {
     public void setQrCodeBase64(String qrCodeBase64) {
         this.qrCodeBase64 = qrCodeBase64;
     }
+
 }
