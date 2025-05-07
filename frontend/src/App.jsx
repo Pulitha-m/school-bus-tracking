@@ -59,9 +59,10 @@ import AdminFeedback from "./Pages/Admin/AdminFeedback";
 import DriverPayment from "./Pages/Driver/DriverPayment";
 
 // changes
-
+import Feedback from "./Pages/Student/StudentFeedback";
 import FeedbackForm from "./Pages/Student/Feedback/AddFeedback";
 import EditFeedback from "./Pages/Student/Feedback/EditFeedback";
+
 
 const PublicLayout = () => {
   return (
