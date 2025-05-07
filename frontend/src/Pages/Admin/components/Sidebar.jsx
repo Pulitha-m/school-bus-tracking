@@ -15,6 +15,7 @@ import {
   MessageSquareIcon,
   HelpCircleIcon,
   MapIcon,
+  DollarSignIcon,
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 

@@ -38,7 +38,7 @@ import StudentAttendance from "./Pages/Student/StudentAttendance";
 
 import StripePayment from "./Pages/components/StripePayment";
 import RegistrationSuccess from "./Pages/components/RegistrationSuccess";
-import FinanceManagement from "./Pages/Admin/FinanceManagement";
+import FinanceManagement  from "./Pages/Admin/FinanceManagement";
 import BusLocation from "./Pages/Student/BusLocation";
 import DriverAttendance from "./Pages/Admin/DriverAttendance";
 import NotificationManagement from "./Pages/Driver/NotficationManagement";
@@ -52,7 +52,9 @@ import { ExpectedStudentsSidebar } from "./Pages/Driver/ExpectedStudentsSidebar"
 import ExpectedStdMgt from "./Pages/Admin/ExpectedStdMgt";
 import StudentPayment from "./Pages/Student/StudentPayment";
 import DriverShift from "./Pages/Driver/DriverShift";
-import ShiftManagement from "./Pages/Admin/DriverAttendance";
+import  ShiftManagement  from "./Pages/Admin/DriverAttendance";
+import DriverPayment from "./Pages/Driver/DriverPayment";
+
 
 // changes
 import Feedback from "./Pages/Student/StudentFeedback";
@@ -120,6 +122,7 @@ export default function App() {
             {/* Driver profile mgt */}
             <Route path="driver-shifts" element={<DriverAttendance />} />
 
+
             {/* notifications mgt */}
             <Route path="notifications" element={<AdminNotification />} />
             <Route
@@ -143,8 +146,9 @@ export default function App() {
             <Route path="location" element={<StudentLocationTracking />} />
             
             <Route path="payments" element={<Payments />} />
-            <Route path="notifications" element={<Notifications />} />
+            {/*<Route path="notifications" element={<Notifications />} />
             <Route path="vehicle" element={<VehicleInfo />} /> */}
+            <Route path="payments" element={<DriverPayment />} />
             <Route path="sharelocation" element={<ShareLocation />} />
             <Route path="location" element={<StudentLocationTracking />} />
             <Route path="qrcode" element={<QRScanner />} />

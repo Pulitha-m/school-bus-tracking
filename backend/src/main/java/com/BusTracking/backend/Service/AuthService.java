@@ -108,7 +108,6 @@ public class AuthService {
     }
 
 
-
     public String logoutUser(HttpSession session) {
         session.invalidate();
         return "User logged out successfully";
